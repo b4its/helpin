@@ -23,20 +23,23 @@
 
       <div class="p-4 md:p-10 flex flex-col w-full max-w-[100vw]">
         
-        <div class="flex justify-between items-end mb-8">
-           <div class="flex gap-4">
-              <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center min-w-[120px]">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+           
+           <div class="flex gap-4 w-full md:w-auto">
+              <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center min-w-[120px] flex-1 md:flex-none">
                  <p class="text-[10px] font-black text-gray-400 uppercase">Kandang</p>
                  <p class="text-2xl font-black text-[#1a402d]">{{ kandangList.length }}</p>
               </div>
-              <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center min-w-[120px]">
+              <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-center min-w-[120px] flex-1 md:flex-none">
                  <p class="text-[10px] font-black text-gray-400 uppercase">Populasi</p>
                  <p class="text-2xl font-black text-orange-600">{{ totalOccupancy }}</p>
               </div>
            </div>
-           <button @click="openModal('create')" class="bg-[#1a402d] text-white px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 hover:bg-[#143222] transition-all active:scale-95">
+
+           <button @click="openModal('create')" class="bg-[#1a402d] text-white px-6 py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-[#143222] transition-all active:scale-95 w-full md:w-auto shrink-0">
              <PlusIcon class="w-5 h-5" /> Tambahkan Kandang
            </button>
+           
         </div>
 
         <section class="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden mb-10">

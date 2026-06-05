@@ -30,7 +30,7 @@
           </div>
           <h2 class="text-xl font-bold mb-2 text-white">Petani Suki</h2>
           <span class="inline-block px-3 py-1 text-[10px] font-bold border border-green-600 text-green-400 rounded uppercase">
-            Authorized Admin
+            Peternak
           </span>
         </div>
 

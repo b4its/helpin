@@ -24,11 +24,7 @@
 
 <div class="p-4 md:p-10 space-y-8">
   
-  <div class="flex justify-end w-full">
-    <button @click="openModal('create')" class="bg-[#1a402d] text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-green-900/20 flex items-center gap-2 hover:scale-105 transition-all active:scale-95">
-      <PlusIcon class="w-5 h-5" /> Tambahkan Ternak
-    </button>
-  </div>
+
 
   <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <div v-for="stat in quickStats" :key="stat.label" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
@@ -41,7 +37,11 @@
       </div>
     </div>
   </section>
-
+  <div class="flex justify-end w-full">
+    <button @click="openModal('create')" class="bg-[#1a402d] text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-green-900/20 flex items-center gap-2 hover:scale-105 transition-all active:scale-95">
+      <PlusIcon class="w-5 h-5" /> Tambahkan Ternak
+    </button>
+  </div>
   <section class="flex flex-col md:flex-row gap-4">
     <div class="relative flex-1 w-full">
       <SearchIcon class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />

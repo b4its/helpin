@@ -28,13 +28,7 @@
 
       <div class="p-4 md:p-10 space-y-8 flex flex-col">
         
-        <button 
-          @click="openInputModal" 
-          class="self-end bg-[#1a402d] text-white px-8 py-4 rounded-[24px] font-black shadow-2xl shadow-green-900/30 flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shrink-0"
-        >
-          <ZapIcon class="w-5 h-5 text-yellow-400 fill-current" />
-          <span class="uppercase tracking-widest text-sm">Analisa Pakan</span>
-        </button>
+
 
         <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div v-for="stat in topStats" :key="stat.label" class="bg-white p-8 rounded-[35px] border border-gray-100 shadow-sm relative overflow-hidden group">
@@ -43,8 +37,15 @@
             <h3 class="text-4xl font-black text-[#1a402d]">{{ stat.value }} <small class="text-xs text-green-500">{{ stat.unit }}</small></h3>
           </div>
         </section>
-
+        <button 
+          @click="openInputModal" 
+          class="self-end bg-[#1a402d] text-white px-8 py-4 rounded-[24px] font-black shadow-2xl shadow-green-900/30 flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shrink-0"
+        >
+          <ZapIcon class="w-5 h-5 text-yellow-400 fill-current" />
+          <span class="uppercase tracking-widest text-sm">Analisa Pakan</span>
+        </button>
         <section class="bg-white rounded-[45px] shadow-sm border border-gray-100 overflow-hidden mb-10">
+          
           <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <h2 class="text-xl font-black text-gray-800 tracking-tight uppercase">Intelligence Audit History</h2>
             <div class="relative">
