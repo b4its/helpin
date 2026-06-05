@@ -17,86 +17,76 @@
           <div class="px-6 md:px-8 mb-8 border-b border-[#23533b] pb-6 bg-[#173a28]">
             <div class="flex items-center gap-2 mb-2">
               <div class="w-2 h-2 rounded-full bg-green-500"></div>
-              <span class="text-xs font-semibold text-green-400">PENGGUNA AKTIF</span>
+              <span class="text-xs font-semibold text-green-400 uppercase">Peternak Aktif</span>
             </div>
             <h2 class="text-xl font-bold mb-2">Petani Suki</h2>
             <span class="inline-block px-3 py-1 text-[10px] font-bold border border-green-600 text-green-400 rounded uppercase tracking-widest">PETERNAK PRO</span>
           </div>
 
           <nav class="flex flex-col gap-1 pl-4">
-            <NuxtLink to="#" class="active-menu relative flex items-center gap-4 px-4 py-4 bg-[#f4f7f5] text-[#1a402d] rounded-l-full font-bold shadow-[-5px_0_10px_rgba(0,0,0,0.05)]">
-              <LayoutDashboardIcon class="w-5 h-5" /> Dashboard
-            </NuxtLink>
-            <NuxtLink v-for="menu in menus" :key="menu.name" to="#" class="flex items-center gap-4 px-4 py-4 text-gray-200 hover:bg-[#23533b] rounded-l-full transition-colors font-medium">
-              <component :is="menu.icon" class="w-5 h-5" /> {{ menu.name }}
+            <NuxtLink 
+              v-for="menu in menus" 
+              :key="menu.name" 
+              :to="menu.path"
+              :class="[
+                'relative flex items-center gap-4 px-4 py-4 transition-all',
+                activeMenu === menu.name 
+                ? 'active-menu bg-[#f4f7f5] text-[#1a402d] rounded-l-full font-black shadow-[-5px_0_10px_rgba(0,0,0,0.05)]' 
+                : 'text-gray-400 hover:text-white font-bold'
+              ]"
+            >
+              <component :is="menu.icon" class="w-5 h-5" />
+              {{ menu.name }}
             </NuxtLink>
           </nav>
         </div>
 
         <div class="p-6">
           <div class="bg-[#143222] rounded-xl p-4 flex items-center justify-between border border-[#1d462f]">
-            <div class="min-w-0">
+            <div class="min-w-0 text-white">
               <span class="text-[10px] text-gray-400 font-semibold uppercase block">Authorized Admin</span>
               <p class="text-sm font-bold truncate pr-2">Admin Suki SUPER</p>
             </div>
-            <LogOutIcon class="w-5 h-5 text-red-400 cursor-pointer" />
+            <button class="text-red-400 hover:text-red-300 transition shrink-0"><LogOutIcon class="w-5 h-5" /></button>
           </div>
         </div>
       </div>
     </aside>
 
     <main class="flex-1 flex flex-col overflow-y-auto relative w-full no-scrollbar">
-      <header class="flex justify-between items-center px-6 md:px-10 py-6 border-b border-gray-200 bg-white/80 backdrop-blur-md z-10 sticky top-0">
+      <header class="flex justify-between items-center px-6 md:px-10 py-6 border-b border-gray-200 bg-white shadow-sm z-10 sticky top-0">
         <div class="flex items-center gap-4">
           <button @click="isSidebarOpen = true" class="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"><MenuIcon class="w-6 h-6" /></button>
           <div>
-            <h1 class="text-xl md:text-2xl font-black text-gray-800 leading-tight">Expert Breeding Intelligence</h1>
-            <p class="text-xs md:text-sm text-gray-500 font-medium mt-0.5 italic">Berdasarkan Audit Sensor & Alur Logika Sistem Pakar</p>
+            <h1 class="text-xl md:text-2xl font-black text-gray-800 leading-tight">Breeding Intelligence</h1>
+            <p class="text-xs md:text-sm text-gray-500 font-medium mt-0.5">Analisis pakar dan pemantauan sensor real-time</p>
           </div>
         </div>
-        <div class="flex items-center gap-4">
-           <div class="hidden lg:flex flex-col text-right">
-              <span class="text-[10px] font-black text-gray-400 uppercase">Akurasi Sistem</span>
-              <span class="text-sm font-bold text-green-600">98.2% Precision</span>
-           </div>
-           <button @click="exportReport" class="bg-[#1a402d] text-white p-2.5 rounded-xl shadow-lg shadow-green-900/20 hover:scale-105 transition-all">
-             <DownloadIcon class="w-5 h-5" />
-           </button>
-        </div>
+        <button @click="exportReport" class="bg-[#1a402d] text-white p-2.5 rounded-xl shadow-lg hover:scale-105 transition-all"><DownloadIcon class="w-5 h-5" /></button>
       </header>
 
       <div class="p-4 md:p-10 space-y-8">
-        
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div class="lg:col-span-2 bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
-            <div class="flex justify-between items-start mb-6">
-              <div>
-                <h3 class="text-lg font-black text-gray-800">Evaluasi Pertumbuhan & Produksi</h3>
-                <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Realitas vs Prediksi Sistem Pakar</p>
-              </div>
-              <div class="bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-black">+12.4% Yield</div>
-            </div>
-            <div class="h-72 w-full">
-              <Line :data="intelligenceTrendData" :options="chartOptions" />
-            </div>
+            <h3 class="text-lg font-black text-gray-800 mb-6 uppercase tracking-widest">Yield Evolution</h3>
+            <div class="h-64 w-full"><Line :data="intelligenceTrendData" :options="chartOptions" /></div>
           </div>
-
           <div class="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center justify-center">
-            <h3 class="text-lg font-black text-gray-800 mb-6 text-center">Status Kesehatan Global</h3>
-            <div class="relative h-56 w-56">
+            <h3 class="text-lg font-black text-gray-800 mb-6">Status Kesehatan</h3>
+            <div class="relative h-48 w-48 flex items-center justify-center">
               <Doughnut :data="healthDistributionData" :options="doughnutOptions" />
-              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
                 <span class="text-4xl font-black text-gray-800">94%</span>
-                <span class="text-[10px] text-green-600 font-black uppercase">Good Health</span>
+                <span class="text-[10px] text-green-600 font-black uppercase">Healthy</span>
               </div>
             </div>
           </div>
         </section>
 
         <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
-           <div v-for="sensor in sensorMetrics" :key="sensor.label" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm group hover:border-green-200 transition-all">
+           <div v-for="sensor in sensorMetrics" :key="sensor.label" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
              <div class="flex items-center gap-4">
-                <div :class="['p-3 rounded-2xl transition-colors', sensor.alert ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600']">
+                <div :class="['p-3 rounded-2xl', sensor.alert ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600']">
                   <component :is="sensor.icon" class="w-6 h-6" />
                 </div>
                 <div>
@@ -104,73 +94,39 @@
                   <p class="text-xl font-black text-gray-800">{{ sensor.value }}<span class="text-xs font-bold text-gray-400 ml-1">{{ sensor.unit }}</span></p>
                 </div>
              </div>
-             <div class="mt-4 flex items-center gap-2">
-                <div class="h-1 flex-1 bg-gray-100 rounded-full overflow-hidden">
-                  <div :class="['h-full rounded-full', sensor.alert ? 'bg-red-500' : 'bg-green-500']" :style="`width: ${sensor.progress}%`"></div>
-                </div>
-                <span class="text-[10px] font-bold text-gray-400">{{ sensor.status }}</span>
-             </div>
            </div>
         </section>
 
         <section class="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden mb-10">
           <div class="p-8 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <div class="w-2 h-8 bg-[#1a402d] rounded-full"></div>
-              <h2 class="text-xl font-black text-gray-800 tracking-tight">Intelligence Recommendation Log</h2>
-            </div>
-            <div class="relative">
-              <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input v-model="searchQuery" type="text" placeholder="Cari ID atau Jenis Ternak..." class="pl-10 pr-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-green-500/20 transition-all w-full md:w-64 font-bold" />
-            </div>
+            <h2 class="text-xl font-black text-gray-800 tracking-tight">Intelligence Recommendation Log</h2>
+            <input v-model="searchQuery" type="text" placeholder="Search..." class="px-4 py-2 bg-gray-50 border-none rounded-xl text-sm font-bold w-full md:w-64" />
           </div>
-          
           <div class="overflow-x-auto no-scrollbar">
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-gray-50/50 text-[11px] font-black text-gray-400 uppercase tracking-[0.15em] border-b border-gray-100">
-                  <th class="px-8 py-5">Audit ID & Ternak</th>
-                  <th class="px-8 py-5">Populasi</th>
-                  <th class="px-8 py-5 text-center">Vitality Score</th>
-                  <th class="px-8 py-5">Diagnosis Intelligence</th>
-                  <th class="px-8 py-5 text-center">Detail Audit</th>
+                  <th class="px-8 py-5">Audit ID & Jenis</th>
+                  <th class="px-8 py-5 text-center">Vitality</th>
+                  <th class="px-8 py-5">Sistem Diagnosis</th>
+                  <th class="px-8 py-5 text-center">Audit</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-50">
-                <tr v-for="item in filteredTableData" :key="item.id" class="hover:bg-green-50/20 transition-all group">
+                <tr v-for="item in filteredTableData" :key="item.id" class="hover:bg-green-50/20 transition-all">
                   <td class="px-8 py-6">
-                    <div class="flex items-center gap-4">
-                      <div class="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-[#1a402d] font-black text-lg shadow-sm">{{ item.jenis.charAt(0) }}</div>
-                      <div class="flex flex-col">
-                        <span class="font-black text-gray-800 text-base">{{ item.jenis }}</span>
-                        <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest tracking-tighter italic">LOG-{{ item.id }}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-8 py-6">
-                    <div class="flex flex-col">
-                      <span class="text-xl font-black text-[#1a402d]">{{ item.jumlah }} <small class="text-[10px] font-bold">EKOR</small></span>
-                      <span class="text-[10px] font-bold text-gray-400 uppercase">Growth Cycle Day 42</span>
-                    </div>
-                  </td>
-                  <td class="px-8 py-6">
-                    <div class="flex flex-col items-center gap-1">
-                       <span :class="['px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest', item.kesehatan === 'Kurang Baik' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600']">
-                        {{ item.kesehatan }}
-                      </span>
-                      <div class="h-1 w-20 bg-gray-100 rounded-full overflow-hidden">
-                        <div :class="['h-full', item.kesehatan === 'Kurang Baik' ? 'bg-red-500' : 'bg-green-500']" :style="`width: ${item.kesehatan === 'Kurang Baik' ? 40 : 95}%`"></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-8 py-6">
-                    <div class="flex flex-col">
-                      <p class="font-bold text-red-500 text-sm leading-relaxed">{{ item.informasi }}</p>
-                      <p class="text-[10px] text-gray-400 font-medium italic mt-1">Saran Pakar: Berikan konsentrat tipe-B + Vitamin C</p>
+                    <div class="flex flex-col font-black text-gray-800 uppercase tracking-tighter">
+                      {{ item.jenis }} <small class="text-[10px] text-gray-400 font-bold">LOG-{{ item.id }}</small>
                     </div>
                   </td>
                   <td class="px-8 py-6 text-center">
-                    <button @click="openAuditDetail(item)" class="p-3 bg-gray-50 text-gray-400 rounded-2xl hover:bg-[#1a402d] hover:text-white hover:rotate-12 transition-all shadow-sm">
+                    <span :class="['px-3 py-1 rounded-full text-[10px] font-black uppercase', item.kesehatan === 'Kurang Baik' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600']">
+                      {{ item.kesehatan }}
+                    </span>
+                  </td>
+                  <td class="px-8 py-6 font-bold text-red-500 text-sm italic">{{ item.informasi }}</td>
+                  <td class="px-8 py-6 text-center">
+                    <button @click="viewFullAudit(item)" class="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-[#1a402d] hover:text-white transition-all">
                       <EyeIcon class="w-5 h-5" />
                     </button>
                   </td>
@@ -184,67 +140,41 @@
 
     <div v-if="isAuditModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-[#0c1a13]/80 backdrop-blur-md animate-in fade-in" @click="isAuditModalOpen = false"></div>
-      
-      <div class="bg-white rounded-[50px] w-full max-w-4xl max-h-[92vh] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)] relative z-10 flex flex-col animate-in slide-in-from-bottom-10 duration-500 no-scrollbar">
-        
-        <div class="bg-gradient-to-br from-[#1a402d] via-[#1a402d] to-[#2d5c41] p-12 text-white relative">
+      <div class="bg-white rounded-[50px] w-full max-w-4xl max-h-[92vh] overflow-hidden shadow-2xl relative z-10 flex flex-col animate-in slide-in-from-bottom duration-500">
+        <div class="bg-gradient-to-br from-[#1a402d] to-[#2d5c41] p-12 text-white relative">
           <button @click="isAuditModalOpen = false" class="absolute top-10 right-10 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all"><XIcon class="w-6 h-6" /></button>
           <div class="flex items-center gap-3 mb-4">
-            <span class="px-3 py-1 bg-green-400 text-[#1a402d] text-[10px] font-black rounded-full uppercase tracking-widest">Digital Audit Verified</span>
-            <span class="text-white/50 font-mono text-sm tracking-widest tracking-widest">#AUD-2026-{{ selectedAudit?.id }}</span>
+            <span class="px-3 py-1 bg-green-400 text-[#1a402d] text-[10px] font-black rounded-full uppercase tracking-widest tracking-widest">Expert Audit Verified</span>
           </div>
-          <h2 class="text-5xl font-black tracking-tighter mb-2 italic">Breeding Intelligence</h2>
-          <p class="text-lg text-white/60 font-medium italic">Data Rinci Nutrisi & Jejak Perkembangan Ternak</p>
+          <h2 class="text-5xl font-black tracking-tighter mb-2 italic">Breeding Intel Passport</h2>
+          <p class="text-lg text-white/60 font-medium italic">REF_ID: #LOG-{{ selectedAudit?.id }} • {{ selectedAudit?.jenis }}</p>
         </div>
-
-        <div class="p-12 overflow-y-auto no-scrollbar grid grid-cols-1 md:grid-cols-2 gap-12 bg-white">
-          
+        <div class="p-12 grid grid-cols-1 md:grid-cols-2 gap-12 bg-white overflow-y-auto no-scrollbar">
           <div class="space-y-6">
-            <h3 class="text-xs font-black text-green-700 uppercase tracking-[0.2em] flex items-center gap-2">
-              <SoupIcon class="w-4 h-4" /> Nutrient & Feed Input Log
-            </h3>
-            <div class="bg-gray-50 rounded-[32px] p-8 border border-gray-100 space-y-6 shadow-inner">
-               <div v-for="feed in feedAnalysis" :key="feed.name" class="flex justify-between items-center">
-                 <div class="flex flex-col">
-                   <span class="text-sm font-black text-gray-800">{{ feed.name }}</span>
-                   <span class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Requirement: {{ feed.target }}%</span>
-                 </div>
-                 <div class="flex items-baseline gap-1">
-                   <span class="text-2xl font-black text-green-800">{{ feed.actual }}</span>
-                   <span class="text-[10px] font-bold text-gray-400">%</span>
-                 </div>
-               </div>
-               <div class="pt-6 border-t border-gray-200">
-                  <p class="text-[10px] font-black text-gray-400 uppercase mb-4 text-center tracking-widest">Expert Recommendation</p>
-                  <div class="bg-white p-5 rounded-2xl text-xs font-bold leading-relaxed text-slate-600 border border-gray-100 shadow-sm italic">
-                    "Sistem mendeteksi defisiensi kalsium. Tambahkan premix mineral 2% dari total pakan harian selama 7 hari ke depan untuk pemulihan optimal."
-                  </div>
+            <h3 class="text-xs font-black text-green-700 uppercase tracking-[0.2em] flex items-center gap-2"><SoupIcon class="w-4 h-4" /> Nutrient Input</h3>
+            <div class="bg-gray-50 rounded-[32px] p-8 border border-gray-100 space-y-4">
+               <div v-for="feed in feedAnalysis" :key="feed.name" class="flex justify-between items-center border-b border-gray-200 pb-3 last:border-0">
+                 <span class="text-sm font-black text-gray-600">{{ feed.name }}</span>
+                 <span class="text-lg font-black text-green-800">{{ feed.actual }}%</span>
                </div>
             </div>
           </div>
-
           <div class="space-y-6">
-            <h3 class="text-xs font-black text-blue-700 uppercase tracking-[0.2em] flex items-center gap-2">
-              <ActivityIcon class="w-4 h-4" /> Real-time Biometrics
-            </h3>
+            <h3 class="text-xs font-black text-blue-700 uppercase tracking-[0.2em] flex items-center gap-2"><ActivityIcon class="w-4 h-4" /> Vitals</h3>
             <div class="grid grid-cols-2 gap-4">
-              <div v-for="bio in biometricData" :key="soil.label" class="bg-blue-50/30 p-5 rounded-3xl border border-blue-100 flex flex-col items-center justify-center">
+              <div v-for="bio in biometricData" :key="bio.label" class="bg-blue-50/30 p-5 rounded-3xl border border-blue-100 flex flex-col items-center">
                 <p class="text-[10px] font-black text-blue-400 uppercase mb-1">{{ bio.label }}</p>
-                <p class="text-2xl font-black text-blue-900">{{ bio.value }}<small class="text-xs ml-0.5">{{ bio.unit }}</small></p>
+                <p class="text-xl font-black text-blue-900">{{ bio.value }}<small class="text-[10px] ml-0.5">{{ bio.unit }}</small></p>
               </div>
             </div>
-            <div class="bg-[#1a402d] rounded-[32px] p-8 text-white relative overflow-hidden shadow-2xl">
-               <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full"></div>
-               <p class="text-[10px] font-black text-green-400 uppercase mb-2 tracking-widest">Weight Prediction Yield</p>
-               <p class="text-5xl font-black mb-4">12.5 <small class="text-lg font-medium italic">Ton</small></p>
-               <p class="text-xs text-white/60 font-medium leading-relaxed italic">Estimasi total output daging saat panen batch ini berdasarkan kurva pertumbuhan saat ini.</p>
+            <div class="bg-[#1a402d] rounded-[32px] p-8 text-white">
+               <p class="text-[10px] font-black text-green-400 uppercase mb-2 tracking-widest">Prediction Weight</p>
+               <p class="text-5xl font-black">12.5 <span class="text-lg font-medium italic text-green-400">Ton</span></p>
             </div>
           </div>
         </div>
-
-        <div class="p-10 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
-          <p class="text-xs text-gray-400 font-medium italic max-w-sm">Data riwayat ini di-generate otomatis oleh HELP-IN AI Advisor berdasarkan flowchart sistem pakar.</p>
-          <button @click="isAuditModalOpen = false" class="px-10 py-5 bg-[#1a402d] text-white rounded-3xl font-black shadow-xl shadow-green-900/40 hover:scale-[1.05] active:scale-95 transition-all">Selesai Meninjau Audit</button>
+        <div class="p-8 bg-gray-50 border-t border-gray-100 text-center">
+          <button @click="isAuditModalOpen = false" class="px-12 py-4 bg-[#1a402d] text-white rounded-3xl font-black shadow-xl hover:scale-105 transition-all">Selesai Meninjau</button>
         </div>
       </div>
     </div>
@@ -253,18 +183,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { 
   LayoutDashboardIcon, HomeIcon, DogIcon, BarChart3Icon, 
   ActivityIcon, ClipboardListIcon, SoupIcon, LogOutIcon, 
   EyeIcon, XIcon, MenuIcon, DownloadIcon, SearchIcon,
   TrendingUpIcon, ThermometerIcon, DropletsIcon, ArchiveIcon
 } from 'lucide-vue-next'
-import { Line, Doughnut, Bar } from 'vue-chartjs'
-import { 
-  Chart as ChartJS, Title, Tooltip, Legend, BarElement, 
-  CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Filler 
-} from 'chart.js'
+import { Line, Doughnut } from 'vue-chartjs'
+import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Filler } from 'chart.js'
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Filler)
 
@@ -273,106 +200,61 @@ const isAuditModalOpen = ref(false)
 const selectedAudit = ref(null)
 const searchQuery = ref('')
 
-// MENU LIST
+// ==========================================
+// SHARED NAVIGATION LOGIC
+// ==========================================
+const activeMenu = ref('Dashboard')
 const menus = [
-  { name: 'Kandang', icon: HomeIcon },
-  { name: 'Ternak', icon: DogIcon },
-  { name: 'Kualitas Ternak', icon: BarChart3Icon },
-  { name: 'Kondisi Kesehatan', icon: ActivityIcon },
-  { name: 'Riwayat Kesehatan', icon: ClipboardListIcon },
-  { name: 'Rekomendasi Pakan', icon: SoupIcon },
+  { name: 'Dashboard', icon: LayoutDashboardIcon, path: '/panel_peternak/dashboard_peternak' },
+  { name: 'Kandang', icon: HomeIcon, path: '/panel_peternak/kandang_peternak' },
+  { name: 'Ternak', icon: DogIcon, path: '#' },
+  { name: 'Kualitas Ternak', icon: BarChart3Icon, path: '#' },
+  { name: 'Kondisi Kesehatan', icon: ActivityIcon, path: '#' },
+  { name: 'Riwayat Kesehatan', icon: ClipboardListIcon, path: '#' },
+  { name: 'Rekomendasi Pakan', icon: SoupIcon, path: '#' },
 ]
 
-// ==========================================
-// DATASET INTELLIGENCE (Berdasarkan Flowchart)
-// ==========================================
+// DUMMY DATA FOR DASHBOARD
 const dummyRekomendasi = [
   { id: '101', jenis: 'SAPI BRAHMAN', jumlah: 20, kesehatan: 'Kurang Baik', informasi: 'Beri Vitamin Pada ternak anda' },
-  { id: '102', jenis: 'SAPI LIMOUSIN', jumlah: 15, kesehatan: 'Sangat Baik', informasi: 'Pertahankan komposisi pakan saat ini' },
-  { id: '103', jenis: 'KAMBING ETAWA', jumlah: 45, kesehatan: 'Kurang Baik', informasi: 'Cek kelembapan kandang, terdeteksi tinggi' },
-  { id: '104', jenis: 'SAPI BRAHMAN', jumlah: 20, kesehatan: 'Kurang Baik', informasi: 'Beri Vitamin Pada ternak anda' },
-  { id: '105', jenis: 'SAPI BRAHMAN', jumlah: 20, kesehatan: 'Kurang Baik', informasi: 'Beri Vitamin Pada ternak anda' }
-];
+  { id: '102', jenis: 'SAPI LIMOUSIN', jumlah: 15, kesehatan: 'Sangat Baik', informasi: 'Komposisi pakan stabil' },
+  { id: '103', jenis: 'KAMBING ETAWA', jumlah: 45, kesehatan: 'Kurang Baik', informasi: 'Cek suhu kandang area B' },
+]
 
 const sensorMetrics = [
-  { label: 'Suhu Kandang', value: '28.5', unit: '°C', status: 'Normal', progress: 75, icon: ThermometerIcon, alert: false },
-  { label: 'Kelembapan (H)', value: '85', unit: '%', status: 'Waspada', progress: 85, icon: DropletsIcon, alert: true },
-  { label: 'Kadar Amonia', value: '12', unit: 'ppm', status: 'Aman', progress: 30, icon: ActivityIcon, alert: false },
-  { label: 'Sisa Pakan', value: '150', unit: 'kg', status: 'Cukup', progress: 60, icon: ArchiveIcon, alert: false },
+  { label: 'Suhu Kandang', value: '28.5', unit: '°C', icon: ThermometerIcon, alert: false },
+  { label: 'Kelembapan', value: '85', unit: '%', icon: DropletsIcon, alert: true },
+  { label: 'Amonia', value: '12', unit: 'ppm', icon: ActivityIcon, alert: false },
+  { label: 'Sisa Pakan', value: '150', unit: 'kg', icon: ArchiveIcon, alert: false },
 ]
 
-const feedAnalysis = [
-  { name: 'Protein Kasar', target: 18, actual: 16.5 },
-  { name: 'Serat Kasar', target: 12, actual: 12.2 },
-  { name: 'Lemak', target: 5, actual: 4.8 },
-  { name: 'Kalsium (Ca)', target: 2.5, actual: 1.1 }
-]
+const feedAnalysis = [{ name: 'Protein', actual: 16.5 }, { name: 'Serat', actual: 12.2 }, { name: 'Lemak', actual: 4.8 }]
+const biometricData = [{ label: 'Heart Rate', value: '72', unit: 'bpm' }, { label: 'Temp', value: '38.2', unit: '°C' }]
 
-const biometricData = [
-  { label: 'Avg Heart Rate', value: '72', unit: 'bpm' },
-  { label: 'Body Temp', value: '38.2', unit: '°C' },
-  { label: 'Daily Movement', value: '2.4', unit: 'km' },
-  { label: 'Feed Intake', value: '14.5', unit: 'kg/day' }
-]
-
-// ==========================================
-// CHART CONFIGURATIONS
-// ==========================================
+// CHART LOGIC
 const intelligenceTrendData = computed(() => ({
-  labels: ['Batch 1', 'Batch 2', 'Batch 3', 'Batch 4', 'Batch 5', 'Batch 6'],
+  labels: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6'],
   datasets: [
-    { label: 'Prediksi Sistem', data: [10, 15, 12, 18, 20, 25], borderColor: '#cbd5e1', borderDash: [5, 5], tension: 0.4, fill: false },
-    { label: 'Realita Lapangan', data: [11, 14, 13, 21, 22, 28], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }
+    { label: 'Prediksi', data: [10, 15, 12, 18, 20, 25], borderColor: '#cbd5e1', borderDash: [5, 5], tension: 0.4 },
+    { label: 'Realita', data: [11, 14, 13, 21, 22, 28], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }
   ]
 }))
 
-const healthDistributionData = {
-  labels: ['Sehat', 'Observasi', 'Sakit'],
-  datasets: [{ data: [94, 4, 2], backgroundColor: ['#10b981', '#fbbf24', '#ef4444'], borderWidth: 0, hoverOffset: 10 }]
-}
-
-const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { weight: 'bold', size: 10 } } } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+const healthDistributionData = { labels: ['Sehat', 'Sakit'], datasets: [{ data: [94, 6], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0 }] }
+const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
 const doughnutOptions = { responsive: true, maintainAspectRatio: false, cutout: '85%', plugins: { legend: { display: false } } }
 
-// ==========================================
-// LOGIC METHODS
-// ==========================================
-const filteredTableData = computed(() => {
-  return dummyRekomendasi.filter(i => i.jenis.toLowerCase().includes(searchQuery.value.toLowerCase()) || i.id.includes(searchQuery.value))
-})
-
-const openAuditDetail = (item) => {
-  selectedAudit.value = item;
-  isAuditModalOpen.value = true;
-}
-
-const exportReport = () => alert('Menyiapkan Laporan Audit Intelijen Peternakan (PDF)...');
+// METHODS
+const filteredTableData = computed(() => dummyRekomendasi.filter(i => i.jenis.toLowerCase().includes(searchQuery.value.toLowerCase())))
+const viewFullAudit = (item) => { selectedAudit.value = item; isAuditModalOpen.value = true; }
+const exportReport = () => alert('Exporting Report...');
 </script>
 
 <style scoped>
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-.active-menu::before {
-  content: ""; position: absolute; right: 0; top: -24px; width: 24px; height: 24px;
-  background-color: transparent; border-bottom-right-radius: 24px;
-  box-shadow: 12px 12px 0 12px #f4f7f5; pointer-events: none;
-}
-
-.active-menu::after {
-  content: ""; position: absolute; right: 0; bottom: -24px; width: 24px; height: 24px;
-  background-color: transparent; border-top-right-radius: 24px;
-  box-shadow: 12px -12px 0 12px #f4f7f5; pointer-events: none;
-}
-
+.active-menu::before { content: ""; position: absolute; right: 0; top: -24px; width: 24px; height: 24px; background-color: transparent; border-bottom-right-radius: 24px; box-shadow: 12px 12px 0 12px #f4f7f5; pointer-events: none; }
+.active-menu::after { content: ""; position: absolute; right: 0; bottom: -24px; width: 24px; height: 24px; background-color: transparent; border-top-right-radius: 24px; box-shadow: 12px -12px 0 12px #f4f7f5; pointer-events: none; }
 .animate-in { animation: fadeIn 0.5s ease-out forwards; }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Modal Scrollbar Custom */
-.overflow-y-auto::-webkit-scrollbar { width: 4px; }
-.overflow-y-auto::-webkit-scrollbar-track { background: transparent; }
-.overflow-y-auto::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
