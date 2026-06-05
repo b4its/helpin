@@ -1,42 +1,7 @@
 <template>
   <div class="flex h-screen w-full bg-[#f4f7f5] font-sans overflow-hidden relative text-slate-900">
     
-    <div v-if="isSidebarOpen" @click="isSidebarOpen = false" class="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm transition-opacity"></div>
-
-    <aside :class="['w-[280px] bg-[#1a402d] text-white flex flex-col justify-between shrink-0 absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 md:relative md:translate-x-0', isSidebarOpen ? 'translate-x-0' : '-translate-x-full']">
-      <div class="overflow-y-auto h-full no-scrollbar flex flex-col justify-between">
-        <div>
-          <div class="px-6 md:px-8 py-8 flex justify-between items-center">
-            <div class="flex items-baseline gap-1">
-              <h1 class="text-3xl font-black tracking-tighter italic text-white">HELPIN</h1>
-              <span class="text-[10px] uppercase font-bold text-green-400 tracking-widest">AI Pro</span>
-            </div>
-            <button @click="isSidebarOpen = false" class="md:hidden text-white"><XIcon class="w-6 h-6" /></button>
-          </div>
-
-          <div class="px-6 md:px-8 mb-8 border-b border-[#23533b] pb-6 bg-[#173a28]">
-            <div class="flex items-center gap-2 mb-2">
-              <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span class="text-xs font-semibold text-green-400 uppercase tracking-widest">Intelligence Active</span>
-            </div>
-            <h2 class="text-xl font-bold mb-2 text-white">Petani Suki</h2>
-            <span class="inline-block px-3 py-1 text-[10px] font-bold border border-green-600 text-green-400 rounded uppercase">Breeder Authority</span>
-          </div>
-
-          <nav class="flex flex-col gap-1 pl-4">
-            <NuxtLink v-for="menu in menus" :key="menu.name" :to="menu.path" :class="['relative flex items-center gap-4 px-4 py-4 transition-all', activeMenu === menu.name ? 'active-menu bg-[#f4f7f5] text-[#1a402d] rounded-l-full font-black shadow-lg' : 'text-gray-400 hover:text-white font-bold']">
-              <component :is="menu.icon" class="w-5 h-5" /> {{ menu.name }}
-            </NuxtLink>
-          </nav>
-        </div>
-        <div class="p-6">
-          <div class="bg-[#143222] rounded-xl p-4 flex items-center justify-between border border-white/5">
-            <p class="text-sm font-bold truncate text-white">Admin Suki SUPER</p>
-            <SparklesIcon class="w-5 h-5 text-yellow-400 animate-spin-slow" />
-          </div>
-        </div>
-      </div>
-    </aside>
+  <SidebarPeternak :isOpen="isSidebarOpen" @close="isSidebarOpen = false" />
 
     <main class="flex-1 flex flex-col overflow-y-auto relative w-full no-scrollbar">
       <header class="flex justify-between items-center px-6 md:px-10 py-6 border-b border-gray-200 bg-white/80 backdrop-blur-md z-10 sticky top-0">
