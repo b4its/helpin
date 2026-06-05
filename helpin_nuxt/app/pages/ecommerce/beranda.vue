@@ -3,9 +3,8 @@
     <header class="fixed w-full top-0 z-40 bg-white/80 backdrop-blur-md border-b border-kopLight/50 transition-all duration-300">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <NuxtLink to="../">
-            <div class="flex items-center gap-2 cursor-pointer">
-            <Icon name="lucide:leaf" class="text-2xl text-kopPrimary" />
-            <h1 class="text-xl font-bold text-kopDark tracking-tight">HELP<span class="text-kopPrimary">IN</span></h1>
+            <div class="flex items-center cursor-pointer">
+                <img src="/assets/helpin_light_logo.png" alt="Logo Helpin Services" class="h-10 w-auto" />
             </div>
         </NuxtLink>
         
@@ -39,7 +38,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center gap-12">
           <div class="md:w-1/2 text-center md:text-left" v-motion :initial="{ opacity: 0, x: -50 }" :enter="{ opacity: 1, x: 0, transition: { duration: 800, type: 'spring', stiffness: 50 } }">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-kopLight/60 text-kopPrimary text-xs font-bold uppercase tracking-widest mb-6 border border-kopPrimary/20">
-              <Icon name="lucide:check-circle-2" /> Koperasi Digital Pertanian & Peternakan
+              <Icon name="lucide:check-circle-2" /> Koperasi Digital Online
             </div>
             <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-kopDark leading-[1.1] mb-6">
               Hasil Bumi Terbaik,<br />
@@ -49,9 +48,11 @@
               Hubungkan diri Anda langsung dengan petani dan peternak lokal. Kualitas segar dari alam, mendukung kesejahteraan bersama.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <button class="bg-kopPrimary text-white px-8 py-3.5 rounded-full font-semibold hover:bg-kopDark transition-all shadow-soft hover:shadow-glow hover:-translate-y-0.5 active:translate-y-0">
+              <NuxtLink 
+                to="/ecommerce/produk"
+                class="bg-kopPrimary text-white px-8 py-3.5 rounded-full font-semibold hover:bg-kopDark transition-all shadow-soft hover:shadow-glow hover:-translate-y-0.5 active:translate-y-0">
                 Belanja Sekarang
-              </button>
+              </NuxtLink>
             </div>
           </div>
           

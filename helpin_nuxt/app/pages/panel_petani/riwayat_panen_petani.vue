@@ -163,7 +163,7 @@
             <span class="px-3 py-1 bg-green-400 text-[#1a402d] text-[10px] font-black rounded-full uppercase tracking-widest">Intelligence Verified</span>
             <span class="text-white/50 font-mono text-sm tracking-widest">LOG: {{ selectedLog?.id }}</span>
           </div>
-          <h2 class="text-5xl font-black tracking-tighter mb-2">Detailed Harvest Intel</h2>
+          <h2 class="text-5xl font-black tracking-tighter mb-2">Detail Riwayat Panen</h2>
           <p class="text-lg text-white/60 font-medium italic">{{ selectedLog?.landName }} • Batch Siklus {{ selectedLog?.cropName }}</p>
         </div>
 

@@ -2,10 +2,11 @@
   <div class="min-h-screen bg-kopSurface flex flex-col font-sans">
     <header class="fixed w-full top-0 z-40 bg-white/80 backdrop-blur-md border-b border-kopLight/50 transition-all duration-300">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-2 cursor-pointer">
-          <Icon name="lucide:leaf" class="text-2xl text-kopPrimary" />
-          <h1 class="text-xl font-bold text-kopDark tracking-tight">Helpin<span class="text-kopPrimary">Kop</span></h1>
-        </div>
+        <NuxtLink to="../">
+            <div class="flex items-center cursor-pointer">
+                <img src="/assets/helpin_light_logo.png" alt="Logo Helpin Services" class="h-10 w-auto" />
+            </div>
+        </NuxtLink>
         
         <nav class="hidden md:flex gap-8 font-medium text-sm text-gray-600">
           <a href="beranda" class="hover:text-kopPrimary transition-colors">Beranda</a>
@@ -35,7 +36,7 @@
             <ol class="inline-flex items-center space-x-1 md:space-x-3">
               <li class="inline-flex items-center hover:text-kopPrimary cursor-pointer transition-colors">Beranda</li>
               <li><Icon name="lucide:chevron-right" class="text-gray-400 text-sm" /></li>
-              <li class="text-kopDark font-semibold">Produk Produk</li>
+              <li class="text-kopDark font-semibold">Produk</li>
             </ol>
           </nav>
           <h1 class="text-3xl md:text-4xl font-bold text-kopDark tracking-tight">Eksplorasi Hasil Bumi</h1>

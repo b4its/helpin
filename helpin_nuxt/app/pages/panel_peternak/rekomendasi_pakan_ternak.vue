@@ -12,7 +12,7 @@
               <SparklesIcon class="w-6 h-6 text-white animate-pulse" />
             </div>
             <div>
-              <h1 class="text-xl md:text-2xl font-black text-gray-800 tracking-tight uppercase">AI Feed Intelligence</h1>
+              <h1 class="text-xl md:text-2xl font-black text-gray-800 tracking-tight uppercase">Rekomendasi Pakan Ternak</h1>
               <p class="text-xs text-gray-500 font-medium italic hidden sm:block">Deep Nutritional Audit & Growth Optimization</p>
             </div>
           </div>
