@@ -2,7 +2,12 @@
 import { ref, shallowRef, onMounted, nextTick } from 'vue'
 
 // ==========================================
-// 1. STATE & LOGIC: 3D CAROUSEL SLIDER
+// 1. STATE & LOGIC: DROPDOWN LOGIN
+// ==========================================
+const isLoginDropdownOpen = ref(false)
+
+// ==========================================
+// 2. STATE & LOGIC: 3D CAROUSEL SLIDER
 // ==========================================
 const features = ref([
   { 
@@ -40,7 +45,7 @@ const getSlideClass = (index: number) => {
 }
 
 // ==========================================
-// 2. STATE & LOGIC: LEAFLET MAP (CSR ONLY)
+// 3. STATE & LOGIC: LEAFLET MAP (CSR ONLY)
 // ==========================================
 const mapContainer = ref<HTMLElement | null>(null)
 const map = shallowRef<any>(null)
@@ -61,18 +66,14 @@ const koperasiLocations = [
 ]
 
 onMounted(async () => {
-  // Pastikan eksekusi murni di sisi Client untuk menghindari error SSR/Hydration
   if (process.client) {
-    // 1. Tunggu Vue selesai membangun elemen <ClientOnly> ke DOM
     await nextTick()
 
-    // 2. Beri sedikit waktu agar dimensi container map terbaca jelas oleh browser
     setTimeout(async () => {
       if (!mapContainer.value) return
 
       const L = await import('leaflet')
 
-      // Fix isu ikon marker bawaan Leaflet hilang saat build process Vite
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -80,7 +81,6 @@ onMounted(async () => {
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
       });
 
-      // Inisialisasi Peta
       map.value = L.map(mapContainer.value).setView([-0.75, 117.0], 8)
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -88,7 +88,6 @@ onMounted(async () => {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map.value)
 
-      // Injeksi Marker dan Popup HTML
       koperasiLocations.forEach(loc => {
         const marker = L.marker([loc.lat, loc.lng]).addTo(map.value)
         const popupContent = `
@@ -107,7 +106,6 @@ onMounted(async () => {
         marker.bindPopup(popupContent)
       })
 
-      // 3. Paksa Leaflet mengkalkulasi ulang lebar dan tinggi agar map tidak blank
       setTimeout(() => {
         if (map.value) map.value.invalidateSize()
       }, 100)
@@ -134,11 +132,46 @@ onMounted(async () => {
           <a href="#" class="hover:text-green-700 transition">Testimoni</a>
         </nav>
       </div>
+      
       <div class="flex items-center gap-5">
-        <NuxtLink 
-          to="ecommerce/beranda"
-          class="text-sm font-bold text-gray-700 hover:text-[#1c4532] transition">Masuk</NuxtLink>
-        <button class="bg-[#1c4532] text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-green-950 transition shadow-md shadow-green-900/10">
+        
+        <div class="relative">
+          <button 
+            @click="isLoginDropdownOpen = !isLoginDropdownOpen"
+            class="text-sm font-bold transition flex items-center gap-1.5 focus:outline-none"
+            :class="isLoginDropdownOpen ? 'text-[#1c4532]' : 'text-gray-700 hover:text-[#1c4532]'"
+          >
+            Masuk
+            <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': isLoginDropdownOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <div v-if="isLoginDropdownOpen" @click="isLoginDropdownOpen = false" class="fixed inset-0 z-40"></div>
+
+          <Transition name="fade-down">
+            <div v-if="isLoginDropdownOpen" class="absolute top-full right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 py-2">
+              <NuxtLink 
+                to="panel_petani/beranda_petani" 
+                @click="isLoginDropdownOpen = false"
+                class="flex items-center gap-3 px-5 py-3 text-sm font-bold text-gray-600 hover:bg-green-50 hover:text-[#1c4532] transition-colors"
+              >
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Sistem Panel
+              </NuxtLink>
+              <NuxtLink 
+                to="/ecommerce/beranda" 
+                @click="isLoginDropdownOpen = false"
+                class="flex items-center gap-3 px-5 py-3 text-sm font-bold text-gray-600 hover:bg-green-50 hover:text-[#1c4532] transition-colors"
+              >
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                E-Commerce
+              </NuxtLink>
+            </div>
+          </Transition>
+        </div>
+
+        <button class="bg-[#1c4532] text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-green-950 transition shadow-md shadow-green-900/10 relative z-50">
           Mulai Gratis
         </button>
       </div>
@@ -334,67 +367,45 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* =========================================
-   LEAFLET CSS CDN (SSR Safe)
-   ========================================= */
+/* CSS LEAFLET & SLIDER */
 @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
 
-/* =========================================
-   3D SLIDER STYLES
-   ========================================= */
-.perspective-1500 {
-  perspective: 1500px;
-}
-.transform-style-preserve-3d {
-  transform-style: preserve-3d;
-}
+.perspective-1500 { perspective: 1500px; }
+.transform-style-preserve-3d { transform-style: preserve-3d; }
 
 .active-slide, .prev-slide, .next-slide {
   transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease;
   will-change: transform, opacity;
 }
 
-.center-slide {
-  transform: translateX(0) scale(1) rotateY(0deg);
-}
-
-.rotate-y-left {
-  transform: translateX(-55%) scale(0.86) rotateY(18deg);
-}
-
-.rotate-y-right {
-  transform: translateX(55%) scale(0.86) rotateY(-18deg);
-}
+.center-slide { transform: translateX(0) scale(1) rotateY(0deg); }
+.rotate-y-left { transform: translateX(-55%) scale(0.86) rotateY(18deg); }
+.rotate-y-right { transform: translateX(55%) scale(0.86) rotateY(-18deg); }
 
 @media (min-width: 768px) {
-  .rotate-y-left { 
-    transform: translateX(-80%) scale(0.88) rotateY(22deg); 
-  }
-  .rotate-y-right { 
-    transform: translateX(80%) scale(0.88) rotateY(-22deg); 
-  }
+  .rotate-y-left { transform: translateX(-80%) scale(0.88) rotateY(22deg); }
+  .rotate-y-right { transform: translateX(80%) scale(0.88) rotateY(-22deg); }
 }
 
-/* =========================================
-   LEAFLET MAP OVERRIDES
-   ========================================= */
-:deep(.leaflet-pane) {
-  z-index: 10 !important;
-}
-:deep(.leaflet-top), :deep(.leaflet-bottom) {
-  z-index: 20 !important;
-}
+:deep(.leaflet-pane) { z-index: 10 !important; }
+:deep(.leaflet-top), :deep(.leaflet-bottom) { z-index: 20 !important; }
 :deep(.leaflet-popup-content-wrapper) {
   border-radius: 12px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   border: 1px solid #f3f4f6;
   padding: 0;
 }
-:deep(.leaflet-popup-content) {
-  margin: 14px;
+:deep(.leaflet-popup-content) { margin: 14px; }
+:deep(.leaflet-popup-tip) { background: white; border: 1px solid #f3f4f6; }
+
+/* Animasi untuk Modal Dropdown */
+.fade-down-enter-active,
+.fade-down-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-:deep(.leaflet-popup-tip) {
-  background: white;
-  border: 1px solid #f3f4f6;
+.fade-down-enter-from,
+.fade-down-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>
