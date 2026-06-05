@@ -14,7 +14,13 @@
             <p class="text-sm text-gray-500 font-medium mt-0.5">Data historis komprehensif berdasarkan input pakar dan sensor</p>
           </div>
         </div>
-
+        <div>
+          <div class="flex items-center gap-2 bg-green-100 px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-green-200">
+            <div class="w-2 h-2 rounded-full bg-green-600 shrink-0 animate-pulse"></div>
+            <span class="text-xs md:text-sm font-bold text-green-600 hidden sm:block">STATUS ONLINE</span>
+            <span class="text-xs md:text-sm font-bold text-green-600 sm:hidden">ONLINE</span>
+          </div>
+        </div>
       </header>
 
       <div class="p-4 md:p-10 space-y-8">

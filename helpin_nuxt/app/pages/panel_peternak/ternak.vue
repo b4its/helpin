@@ -12,102 +12,113 @@
             <p class="text-xs md:text-sm text-gray-500 font-medium mt-0.5 italic">Audit biometrik dan histori nutrisi per individu</p>
           </div>
         </div>
-        <button @click="openModal('create')" class="bg-[#1a402d] text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-green-900/20 flex items-center gap-2 hover:scale-105 transition-all active:scale-95">
-          <PlusIcon class="w-5 h-5" /> Tambahkan Ternak
-        </button>
+        <div>
+          <div class="flex items-center gap-2 bg-green-100 px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-green-200">
+            <div class="w-2 h-2 rounded-full bg-green-600 shrink-0 animate-pulse"></div>
+            <span class="text-xs md:text-sm font-bold text-green-600 hidden sm:block">STATUS ONLINE</span>
+            <span class="text-xs md:text-sm font-bold text-green-600 sm:hidden">ONLINE</span>
+          </div>
+        </div>
+
       </header>
 
-      <div class="p-4 md:p-10 space-y-8">
-        
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div v-for="stat in quickStats" :key="stat.label" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{{ stat.label }}</p>
-            <div class="flex items-end justify-between">
-              <h3 class="text-3xl font-black text-[#1a402d]">{{ stat.value }}</h3>
-              <span :class="['text-[10px] font-black px-2 py-1 rounded-lg', stat.alert ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600']">
-                {{ stat.status }}
-              </span>
-            </div>
-          </div>
-        </section>
+<div class="p-4 md:p-10 space-y-8">
+  
+  <div class="flex justify-end w-full">
+    <button @click="openModal('create')" class="bg-[#1a402d] text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-green-900/20 flex items-center gap-2 hover:scale-105 transition-all active:scale-95">
+      <PlusIcon class="w-5 h-5" /> Tambahkan Ternak
+    </button>
+  </div>
 
-        <section class="flex flex-col md:flex-row gap-4">
-          <div class="relative flex-1 w-full">
-            <SearchIcon class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input v-model="searchQuery" type="text" placeholder="Cari berdasarkan Tag ID, Ras, atau Nama Ternak..." class="w-full pl-14 pr-6 py-4 bg-white border border-gray-100 rounded-2xl outline-none focus:ring-4 focus:ring-green-500/10 transition-all font-bold text-sm" />
-          </div>
-          <select v-model="filterCategory" class="px-6 py-4 bg-white border border-gray-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-green-500/10">
-            <option value="">Semua Kategori</option>
-            <option value="Sapi">Sapi</option>
-            <option value="Kambing">Kambing</option>
-            <option value="Domba">Domba</option>
-          </select>
-        </section>
-
-        <section class="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden mb-10">
-          <div class="overflow-x-auto no-scrollbar">
-            <table class="w-full text-left border-collapse min-w-[1000px]">
-              <thead>
-                <tr class="bg-gray-50/50 text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">
-                  <th class="px-8 py-6">ID & DNA Meta</th>
-                  <th class="px-8 py-6">Kategori & Ras</th>
-                  <th class="px-8 py-6 text-center">Body Weight</th>
-                  <th class="px-8 py-6">Health Score</th>
-                  <th class="px-8 py-6 text-center">Audit</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-50">
-                <tr v-if="filteredLivestock.length === 0">
-                  <td colspan="5" class="py-20 text-center font-bold text-gray-300">Data ternak tidak ditemukan...</td>
-                </tr>
-                <tr v-for="item in filteredLivestock" :key="item.id" class="hover:bg-green-50/30 transition-all group">
-                  <td class="px-8 py-6">
-                    <div class="flex flex-col">
-                      <span class="font-black text-gray-800 text-lg group-hover:text-green-800 transition uppercase tracking-tighter">{{ item.tagId }}</span>
-                      <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{{ formatDate(item.entryDate) }} • Reg ID: {{ item.id }}</span>
-                    </div>
-                  </td>
-                  <td class="px-8 py-6">
-                    <div class="flex items-center gap-4">
-                      <div class="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-[#1a402d] font-black shadow-sm uppercase">{{ item.category.charAt(0) }}</div>
-                      <div class="flex flex-col">
-                        <span class="font-black text-gray-700 text-base uppercase">{{ item.category }}</span>
-                        <span class="text-xs text-gray-400 font-medium italic">{{ item.breed }}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-8 py-6 text-center">
-                    <div class="flex flex-col">
-                      <span class="text-2xl font-black text-slate-800">{{ item.weight }} <small class="text-xs italic font-bold">KG</small></span>
-                      <span class="text-[10px] font-black text-blue-500 uppercase">Growth +2.4%</span>
-                    </div>
-                  </td>
-                  <td class="px-8 py-6">
-                    <div class="flex flex-col gap-2">
-                       <span :class="['w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest', item.healthStatus === 'Sakit' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600']">
-                        {{ item.healthStatus }}
-                      </span>
-                      <div class="h-1.5 w-24 bg-gray-100 rounded-full overflow-hidden">
-                        <div :class="['h-full rounded-full', item.healthStatus === 'Sakit' ? 'bg-red-500' : 'bg-green-500']" :style="`width: ${item.healthScore}%`" ></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="px-8 py-6 text-center">
-                    <div class="flex justify-center gap-2">
-                      <button @click="viewFullPassport(item)" class="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-[#1a402d] hover:text-white hover:rotate-12 transition-all shadow-sm">
-                        <EyeIcon class="w-5 h-5" />
-                      </button>
-                      <button @click="confirmDelete(item)" class="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
-                        <Trash2Icon class="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div v-for="stat in quickStats" :key="stat.label" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+      <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{{ stat.label }}</p>
+      <div class="flex items-end justify-between">
+        <h3 class="text-3xl font-black text-[#1a402d]">{{ stat.value }}</h3>
+        <span :class="['text-[10px] font-black px-2 py-1 rounded-lg', stat.alert ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600']">
+          {{ stat.status }}
+        </span>
       </div>
+    </div>
+  </section>
+
+  <section class="flex flex-col md:flex-row gap-4">
+    <div class="relative flex-1 w-full">
+      <SearchIcon class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <input v-model="searchQuery" type="text" placeholder="Cari berdasarkan Tag ID, Ras, atau Nama Ternak..." class="w-full pl-14 pr-6 py-4 bg-white border border-gray-100 rounded-2xl outline-none focus:ring-4 focus:ring-green-500/10 transition-all font-bold text-sm" />
+    </div>
+    <select v-model="filterCategory" class="px-6 py-4 bg-white border border-gray-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-green-500/10">
+      <option value="">Semua Kategori</option>
+      <option value="Sapi">Sapi</option>
+      <option value="Kambing">Kambing</option>
+      <option value="Domba">Domba</option>
+    </select>
+  </section>
+
+  <section class="bg-white rounded-[40px] shadow-sm border border-gray-100 overflow-hidden mb-10">
+    <div class="overflow-x-auto no-scrollbar">
+      <table class="w-full text-left border-collapse min-w-[1000px]">
+        <thead>
+          <tr class="bg-gray-50/50 text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">
+            <th class="px-8 py-6">ID & DNA Meta</th>
+            <th class="px-8 py-6">Kategori & Ras</th>
+            <th class="px-8 py-6 text-center">Body Weight</th>
+            <th class="px-8 py-6">Health Score</th>
+            <th class="px-8 py-6 text-center">Audit</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr v-if="filteredLivestock.length === 0">
+            <td colspan="5" class="py-20 text-center font-bold text-gray-300">Data ternak tidak ditemukan...</td>
+          </tr>
+          <tr v-for="item in filteredLivestock" :key="item.id" class="hover:bg-green-50/30 transition-all group">
+            <td class="px-8 py-6">
+              <div class="flex flex-col">
+                <span class="font-black text-gray-800 text-lg group-hover:text-green-800 transition uppercase tracking-tighter">{{ item.tagId }}</span>
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{{ formatDate(item.entryDate) }} • Reg ID: {{ item.id }}</span>
+              </div>
+            </td>
+            <td class="px-8 py-6">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-[#1a402d] font-black shadow-sm uppercase">{{ item.category.charAt(0) }}</div>
+                <div class="flex flex-col">
+                  <span class="font-black text-gray-700 text-base uppercase">{{ item.category }}</span>
+                  <span class="text-xs text-gray-400 font-medium italic">{{ item.breed }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="px-8 py-6 text-center">
+              <div class="flex flex-col">
+                <span class="text-2xl font-black text-slate-800">{{ item.weight }} <small class="text-xs italic font-bold">KG</small></span>
+                <span class="text-[10px] font-black text-blue-500 uppercase">Growth +2.4%</span>
+              </div>
+            </td>
+            <td class="px-8 py-6">
+              <div class="flex flex-col gap-2">
+                 <span :class="['w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest', item.healthStatus === 'Sakit' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600']">
+                  {{ item.healthStatus }}
+                </span>
+                <div class="h-1.5 w-24 bg-gray-100 rounded-full overflow-hidden">
+                  <div :class="['h-full rounded-full', item.healthStatus === 'Sakit' ? 'bg-red-500' : 'bg-green-500']" :style="`width: ${item.healthScore}%`" ></div>
+                </div>
+              </div>
+            </td>
+            <td class="px-8 py-6 text-center">
+              <div class="flex justify-center gap-2">
+                <button @click="viewFullPassport(item)" class="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-[#1a402d] hover:text-white hover:rotate-12 transition-all shadow-sm">
+                  <EyeIcon class="w-5 h-5" />
+                </button>
+                <button @click="confirmDelete(item)" class="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                  <Trash2Icon class="w-5 h-5" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
     </main>
 
     <div v-if="isPassportOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">

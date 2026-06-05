@@ -12,7 +12,13 @@
             <p class="text-xs md:text-sm text-gray-500 font-medium mt-0.5">Analisis pakar dan pemantauan sensor real-time</p>
           </div>
         </div>
-        <button @click="exportReport" class="bg-[#1a402d] text-white p-2.5 rounded-xl shadow-lg hover:scale-105 transition-all"><DownloadIcon class="w-5 h-5" /></button>
+        <div>
+          <div class="flex items-center gap-2 bg-green-100 px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-green-200">
+            <div class="w-2 h-2 rounded-full bg-green-600 shrink-0 animate-pulse"></div>
+            <span class="text-xs md:text-sm font-bold text-green-600 hidden sm:block">STATUS ONLINE</span>
+            <span class="text-xs md:text-sm font-bold text-green-600 sm:hidden">ONLINE</span>
+          </div>
+        </div>
       </header>
 
       <div class="p-4 md:p-10 space-y-8">
