@@ -53,7 +53,7 @@
               <WheatIcon class="w-5 h-5" />
               Hasil Panen
             </NuxtLink>
-            <NuxtLink to="#" class="flex items-center gap-4 px-4 py-4 text-gray-200 hover:bg-[#23533b] rounded-l-full transition-colors font-medium">
+            <NuxtLink to="riwayat_panen_petani" class="flex items-center gap-4 px-4 py-4 text-gray-200 hover:bg-[#23533b] rounded-l-full transition-colors font-medium">
               <HistoryIcon class="w-5 h-5" />
               Riwayat Panen 
             </NuxtLink>
