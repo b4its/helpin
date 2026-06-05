@@ -1,81 +1,7 @@
 <template>
   <div class="flex h-screen w-full bg-[#f4f7f5] font-sans overflow-hidden relative">
     
-    <div 
-      v-if="isSidebarOpen" 
-      @click="isSidebarOpen = false" 
-      class="fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity backdrop-blur-sm"
-    ></div>
-
-    <aside 
-      :class="[
-        'w-[280px] bg-[#1a402d] text-white flex flex-col justify-between shrink-0 absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0',
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      ]"
-    >
-      <div class="overflow-y-auto overflow-x-hidden h-full no-scrollbar flex flex-col justify-between">
-        <div>
-          <div class="px-6 md:px-8 py-6 md:py-8 flex justify-between items-center">
-            <div class="flex items-baseline gap-1">
-              <h1 class="text-3xl font-extrabold tracking-wider">HELPIN</h1>
-              <span class="text-[10px] uppercase tracking-widest font-semibold text-gray-300">Services</span>
-            </div>
-            <button @click="isSidebarOpen = false" class="md:hidden text-white hover:text-red-400">
-              <XIcon class="w-6 h-6" />
-            </button>
-          </div>
-
-          <div class="px-6 md:px-8 mb-6 md:mb-8 border-b border-[#23533b] pb-6 bg-[#173a28]">
-            <div class="flex items-center gap-2 mb-2">
-              <div class="w-2 h-2 rounded-full bg-green-500"></div>
-              <span class="text-xs font-semibold text-green-400">PENGGUNA AKTIF</span>
-            </div>
-            <h2 class="text-xl font-bold mb-2">Petani Suki</h2>
-            <span class="inline-block px-3 py-1 text-[10px] font-bold border border-green-600 text-green-400 rounded">
-              PETANI
-            </span>
-          </div>
-
-          <nav class="flex flex-col gap-2 pl-4">
-            <a href="dashboard_petani" class="flex items-center gap-4 px-4 py-4 text-gray-200 hover:bg-[#23533b] rounded-l-full transition-colors font-medium">
-              <LayoutDashboardIcon class="w-5 h-5" />
-              Dashboard
-            </a>
-            <a href="inventori_petani" class="active-menu relative flex items-center gap-4 px-4 py-4 bg-[#f4f7f5] text-[#1a402d] rounded-l-full font-bold shadow-[-5px_0_10px_rgba(0,0,0,0.05)]">
-              <ArchiveIcon class="w-5 h-5" />
-              Inventori
-            </a>
-            <a href="lahan_petani" class="flex items-center gap-4 px-4 py-4 text-gray-200 hover:bg-[#23533b] rounded-l-full transition-colors font-medium">
-              <MapIcon class="w-5 h-5" />
-              Lahan
-            </a>
-            <a href="hasil_panen_petani" class="flex items-center gap-4 px-4 py-4 text-gray-200 hover:bg-[#23533b] rounded-l-full transition-colors font-medium">
-              <WheatIcon class="w-5 h-5" />
-              Hasil Panen
-            </a>
-            <a href="#" class="flex items-center gap-4 px-4 py-4 text-gray-200 hover:bg-[#23533b] rounded-l-full transition-colors font-medium">
-              <HistoryIcon class="w-5 h-5" />
-              Riwayat Panen
-            </a>
-          </nav>
-        </div>
-
-        <div class="p-6">
-          <div class="bg-[#143222] rounded-xl p-4 flex items-center justify-between">
-            <div class="min-w-0">
-              <div class="flex items-center gap-2 mb-1">
-                <div class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"></div>
-                <span class="text-[10px] text-gray-400 font-semibold uppercase truncate">Logged in as</span>
-              </div>
-              <p class="text-sm font-bold truncate pr-2">Admin Suki SUPER</p>
-            </div>
-            <button class="text-red-400 hover:text-red-300 transition shrink-0">
-              <LogOutIcon class="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </aside>
+<SidebarPetani :isOpen="isSidebarOpen" @close="isSidebarOpen = false" />
 
     <main class="flex-1 flex flex-col overflow-y-auto relative w-full">
       <header class="flex justify-between items-center px-6 md:px-10 py-4 md:py-6 border-b border-gray-200 bg-white shadow-sm z-10 sticky top-0">
@@ -106,7 +32,7 @@
             </div>
             
             <button @click="openModal('create')" class="w-full sm:w-auto px-4 py-2.5 font-bold text-white bg-[#1a402d] hover:bg-[#143222] rounded-lg transition shadow-md flex items-center justify-center gap-2">
-              <PlusIcon class="w-5 h-5" /> Tambah Barang
+              <PlusIcon class="w-5 h-5" /> Tambahkan Inventori
             </button>
           </div>
           

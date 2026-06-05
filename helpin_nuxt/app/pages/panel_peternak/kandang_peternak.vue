@@ -28,7 +28,7 @@
               </div>
            </div>
            <button @click="openModal('create')" class="bg-[#1a402d] text-white px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 hover:bg-[#143222] transition-all active:scale-95">
-             <PlusIcon class="w-5 h-5" /> Tambah Kandang
+             <PlusIcon class="w-5 h-5" /> Tambahkan Kandang
            </button>
         </div>
 

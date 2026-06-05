@@ -152,7 +152,7 @@ onMounted(async () => {
           <Transition name="fade-down">
             <div v-if="isLoginDropdownOpen" class="absolute top-full right-0 mt-3 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 py-2">
               <NuxtLink 
-                to="panel_petani/beranda_petani" 
+                to="panel_petani/dashboard_petani" 
                 @click="isLoginDropdownOpen = false"
                 class="flex items-center gap-3 px-5 py-3 text-sm font-bold text-gray-600 hover:bg-green-50 hover:text-[#1c4532] transition-colors"
               >

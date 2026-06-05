@@ -8,7 +8,7 @@
         <div class="flex items-center gap-4">
           <button @click="isSidebarOpen = true" class="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"><MenuIcon class="w-6 h-6" /></button>
           <div>
-            <h1 class="text-xl md:text-2xl font-black text-gray-800 leading-tight">Breeding Intelligence</h1>
+            <h1 class="text-xl md:text-2xl font-black text-gray-800 leading-tight">Dashboard</h1>
             <p class="text-xs md:text-sm text-gray-500 font-medium mt-0.5">Analisis pakar dan pemantauan sensor real-time</p>
           </div>
         </div>

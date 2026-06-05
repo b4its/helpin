@@ -13,7 +13,7 @@
           </div>
         </div>
         <button @click="openModal('create')" class="bg-[#1a402d] text-white px-6 py-3 rounded-2xl font-black shadow-xl shadow-green-900/20 flex items-center gap-2 hover:scale-105 transition-all active:scale-95">
-          <PlusIcon class="w-5 h-5" /> Registrasi Ternak
+          <PlusIcon class="w-5 h-5" /> Tambahkan Ternak
         </button>
       </header>
 

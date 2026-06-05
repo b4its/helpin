@@ -8,15 +8,11 @@
         <div class="flex items-center gap-4">
           <button @click="isSidebarOpen = true" class="md:hidden p-2 text-gray-600 border rounded-lg"><MenuIcon class="w-6 h-6" /></button>
           <div>
-            <h1 class="text-xl md:text-2xl font-black text-gray-800 tracking-tight uppercase">Medical Health Intelligence</h1>
+            <h1 class="text-xl md:text-2xl font-black text-gray-800 tracking-tight">Kondisi Kesehatan Ternak</h1>
             <p class="text-xs md:text-sm text-gray-500 font-medium italic">Monitoring bio-metrik dan audit status medis ternak</p>
           </div>
         </div>
-        <div class="flex items-center gap-3">
-          <button @click="exportMedicalReport" class="bg-[#1a402d] text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:shadow-xl transition-all">
-            <ShieldCheckIcon class="w-4 h-4" /> Export Health Log
-          </button>
-        </div>
+
       </header>
 
       <div class="p-4 md:p-10 space-y-8">
