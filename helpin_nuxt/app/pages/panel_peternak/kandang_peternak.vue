@@ -184,10 +184,9 @@ const menus = [
   { name: 'Dashboard', icon: LayoutDashboardIcon, path: '/panel_peternak/dashboard_peternak' },
   { name: 'Kandang', icon: HomeIcon, path: '/panel_peternak/kandang_peternak' },
   { name: 'Ternak', icon: DogIcon, path: '/panel_peternak/ternak' },
-  { name: 'Kualitas Ternak', icon: BarChart3Icon, path: '#' },
-  { name: 'Kondisi Kesehatan', icon: ActivityIcon, path: '#' },
-  { name: 'Riwayat Kesehatan', icon: ClipboardListIcon, path: '#' },
-  { name: 'Rekomendasi Pakan', icon: SoupIcon, path: '#' },
+  { name: 'Kualitas Ternak', icon: BarChart3Icon, path: '/panel_peternak/kualitas_ternak' },
+  { name: 'Kondisi Kesehatan Ternak', icon: ActivityIcon, path: '/panel_peternak/kondisi_kesehatan_ternak'  },
+  { name: 'Rekomendasi Pakan', icon: SoupIcon, path: '/panel_peternak/rekomendasi_pakan_ternak' },
 ]
 
 // ==========================================
