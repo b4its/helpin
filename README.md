@@ -3,7 +3,6 @@
 # Teknologi yang digunakan
 - Nuxt Js
 - Rust (Axum)
-- Python 
-- Laravel 13.x
+- Python (Fast Api)
 - PostgreSQL
 - MongoDB
