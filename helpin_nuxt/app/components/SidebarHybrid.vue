@@ -67,7 +67,7 @@
 
 <script setup>
 import { 
-  MonitorIcon, WalletIcon, LayoutDashboardIcon, 
+  MonitorIcon, WalletIcon, LayoutDashboardIcon, CreditCardIcon,
   XIcon, LogOutIcon 
 } from 'lucide-vue-next'
 
@@ -84,6 +84,7 @@ defineEmits(['close'])
 const menus = [
   { name: 'Kasir POS', icon: MonitorIcon, path: '/panel_hybrid/kasir' },
   { name: 'Buku Kas', icon: WalletIcon, path: '/panel_hybrid/kas' },
+  { name: 'Aktifitas Utang', icon: CreditCardIcon, path: '/panel_hybrid/aktifitas_utang' },
   { name: 'Kembali ke Dashboard', icon: LayoutDashboardIcon, path: '/' },
 ]
 </script>
