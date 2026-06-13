@@ -323,3 +323,171 @@ pub async fn list_categories(
         .collect();
     Ok(Json(response))
 }
+
+// ── Category CRUD ────────────────────────────────────────────────────────────
+
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+pub struct CategoryRequest {
+    pub name: String,
+    pub icon: Option<String>,
+}
+
+fn db_err(e: sqlx::Error) -> AppError {
+    AppError {
+        status: axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+        message: format!("Database error: {}", e),
+        details: None,
+    }
+}
+
+pub async fn create_category(
+    auth: AuthUser,
+    meta: ClientMeta,
+    State(state): State<AppState>,
+    Json(body): Json<CategoryRequest>,
+) -> Result<Json<CategoryResponse>, AppError> {
+    let name = body.name.trim().to_string();
+    if name.is_empty() {
+        return Err(AppError {
+            status: axum::http::StatusCode::BAD_REQUEST,
+            message: "Nama kategori wajib diisi".to_string(),
+            details: None,
+        });
+    }
+    // Cek duplikat
+    let exists: bool = sqlx::query_scalar::<_, bool>(
+        "SELECT EXISTS(SELECT 1 FROM categories WHERE LOWER(name) = LOWER($1))",
+    )
+    .bind(&name)
+    .fetch_one(&state.pool)
+    .await
+    .unwrap_or(false);
+
+    if exists {
+        return Err(AppError {
+            status: axum::http::StatusCode::CONFLICT,
+            message: format!("Kategori '{}' sudah ada", name),
+            details: None,
+        });
+    }
+
+    let id = Uuid::new_v4();
+    let row = sqlx::query_as::<_, Category>(
+        "INSERT INTO categories (id, name, icon, item_count) VALUES ($1, $2, $3, 0) RETURNING id, name, icon, item_count",
+    )
+    .bind(id)
+    .bind(&name)
+    .bind(&body.icon)
+    .fetch_one(&state.pool)
+    .await
+    .map_err(db_err)?;
+
+    let actor = actor_name(&state, auth.user_id).await;
+    activity::record(&state.mongo, &state.blockchain_service, &meta, ActivityCtx {
+        title: "Tambah Kategori".to_string(),
+        action_type: "CREATED".to_string(),
+        table_affected: "categories".to_string(),
+        description: format!("Kategori '{}' ditambahkan", name),
+        username: actor,
+        old_data: json!({}),
+        new_data: json!({ "id": id, "name": name }),
+    }).await;
+
+    Ok(Json(CategoryResponse { id: row.id, name: row.name, icon: row.icon, item_count: row.item_count }))
+}
+
+pub async fn update_category(
+    auth: AuthUser,
+    meta: ClientMeta,
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+    Json(body): Json<CategoryRequest>,
+) -> Result<Json<CategoryResponse>, AppError> {
+    let name = body.name.trim().to_string();
+    if name.is_empty() {
+        return Err(AppError {
+            status: axum::http::StatusCode::BAD_REQUEST,
+            message: "Nama kategori wajib diisi".to_string(),
+            details: None,
+        });
+    }
+
+    // Baca data lama untuk activity log
+    let old: Option<Category> = sqlx::query_as::<_, Category>(
+        "SELECT id, name, icon, item_count FROM categories WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(db_err)?;
+
+    let row = sqlx::query_as::<_, Category>(
+        "UPDATE categories SET name = $2, icon = $3 WHERE id = $1 RETURNING id, name, icon, item_count",
+    )
+    .bind(id)
+    .bind(&name)
+    .bind(&body.icon)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(db_err)?
+    .ok_or_else(|| AppError {
+        status: axum::http::StatusCode::NOT_FOUND,
+        message: "Kategori tidak ditemukan".to_string(),
+        details: None,
+    })?;
+
+    let actor = actor_name(&state, auth.user_id).await;
+    activity::record(&state.mongo, &state.blockchain_service, &meta, ActivityCtx {
+        title: "Update Kategori".to_string(),
+        action_type: "UPDATED".to_string(),
+        table_affected: "categories".to_string(),
+        description: format!("Kategori '{}' diperbarui", name),
+        username: actor,
+        old_data: json!({ "name": old.map(|c| c.name) }),
+        new_data: json!({ "id": id, "name": name }),
+    }).await;
+
+    Ok(Json(CategoryResponse { id: row.id, name: row.name, icon: row.icon, item_count: row.item_count }))
+}
+
+pub async fn delete_category(
+    auth: AuthUser,
+    meta: ClientMeta,
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<MessageResponse>, AppError> {
+    let old: Option<Category> = sqlx::query_as::<_, Category>(
+        "SELECT id, name, icon, item_count FROM categories WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(db_err)?;
+
+    // Lepas referensi produk sebelum hapus (set category_id ke NULL)
+    let _ = sqlx::query("UPDATE products SET category_id = NULL WHERE category_id = $1")
+        .bind(id)
+        .execute(&state.pool)
+        .await;
+
+    sqlx::query("DELETE FROM categories WHERE id = $1")
+        .bind(id)
+        .execute(&state.pool)
+        .await
+        .map_err(db_err)?;
+
+    let actor = actor_name(&state, auth.user_id).await;
+    activity::record(&state.mongo, &state.blockchain_service, &meta, ActivityCtx {
+        title: "Hapus Kategori".to_string(),
+        action_type: "DELETED".to_string(),
+        table_affected: "categories".to_string(),
+        description: format!("Kategori '{}' dihapus", old.as_ref().map(|c| c.name.clone()).unwrap_or_default()),
+        username: actor,
+        old_data: old.map(|c| json!({ "name": c.name })).unwrap_or(json!({})),
+        new_data: json!({}),
+    }).await;
+
+    Ok(Json(MessageResponse { message: "Kategori berhasil dihapus".to_string() }))
+}

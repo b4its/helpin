@@ -24,7 +24,7 @@ use crate::presentation::handlers::{
     admin_handler, auth_handler, cart_handler, farm_handler, feed_handler, finance_handler,
     health_handler, inventory_handler, livestock_handler, livestock_health_handler, ml_handler,
     order_handler, pen_handler, pos_handler, prediction_handler, prefetch_handler, product_handler,
-    sync_handler, treatment_handler,
+    sync_handler, treatment_handler, blockchain_handler,
 };
 
 #[derive(Clone)]
@@ -144,7 +144,11 @@ pub fn create_router(state: AppState) -> Router {
                 .put(product_handler::update)
                 .delete(product_handler::delete),
         )
-        .route("/api/categories", get(product_handler::list_categories))
+        .route("/api/categories", get(product_handler::list_categories).post(product_handler::create_category))
+        .route(
+            "/api/categories/{id}",
+            put(product_handler::update_category).delete(product_handler::delete_category),
+        )
         // Cart
         .route(
             "/api/cart",
@@ -223,5 +227,16 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/prefetch/delta", get(prefetch_handler::delta_sync))
         // Health
         .route("/api/health", get(health_handler::health_check))
+        // ── Blockchain Explorer ──────────────────────────────────
+        .route("/api/blockchain/status", get(blockchain_handler::status))
+        .route("/api/blockchain/stats", get(blockchain_handler::stats))
+        .route("/api/blockchain/tx/{hash}", get(blockchain_handler::get_tx))
+        .route("/api/blockchain/block/{number}", get(blockchain_handler::get_block))
+        .route("/api/blockchain/explorer/search/{query}", get(blockchain_handler::explorer_search))
+        .route("/api/blockchain/explorer/hash/{tx_hash}/trace", get(blockchain_handler::explorer_trace))
+        .route("/api/blockchain/explorer/recent", get(blockchain_handler::explorer_recent))
+        .route("/api/blockchain/explorer/activities/recent", get(blockchain_handler::explorer_activities_recent))
+        .route("/api/blockchain/activity/{id}", get(blockchain_handler::get_activity))
+        .route("/api/blockchain/activity/verify", post(blockchain_handler::verify_activity))
         .with_state(state)
 }

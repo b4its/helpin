@@ -17,3 +17,4 @@ pub mod sync_handler;
 pub mod ml_handler;
 pub mod health_handler;
 pub mod prefetch_handler;
+pub mod blockchain_handler;

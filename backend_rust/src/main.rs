@@ -168,6 +168,34 @@ async fn run_startup_migrations(pool: &sqlx::PgPool) {
         "ALTER TABLE products ADD COLUMN IF NOT EXISTS purchase_price BIGINT DEFAULT 0",
         "ALTER TABLE products ADD COLUMN IF NOT EXISTS expired_at DATE",
         "ALTER TABLE products ADD COLUMN IF NOT EXISTS entry_date DATE DEFAULT CURRENT_DATE",
+        // Migration 009: Blockchain enhanced tracking
+        "ALTER TABLE blockchain_transactions ADD COLUMN IF NOT EXISTS reference_type_detail VARCHAR(100)",
+        "ALTER TABLE blockchain_transactions ADD COLUMN IF NOT EXISTS payload_hash VARCHAR(66)",
+        "ALTER TABLE blockchain_transactions ADD COLUMN IF NOT EXISTS contract_address VARCHAR(42)",
+        "ALTER TABLE blockchain_transactions ADD COLUMN IF NOT EXISTS from_address VARCHAR(42)",
+        "ALTER TABLE blockchain_transactions ADD COLUMN IF NOT EXISTS gas_used BIGINT",
+        "ALTER TABLE blockchain_transactions ADD COLUMN IF NOT EXISTS chain_id INTEGER DEFAULT 1337",
+        "ALTER TABLE blockchain_transactions ADD COLUMN IF NOT EXISTS event_name VARCHAR(100)",
+        "ALTER TABLE blockchain_transactions ADD COLUMN IF NOT EXISTS raw_data JSONB",
+        r#"CREATE TABLE IF NOT EXISTS activity_blockchain_log (
+            id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            activity_id      UUID NOT NULL,
+            action_type      VARCHAR(50) NOT NULL,
+            table_affected   VARCHAR(100) NOT NULL,
+            username         VARCHAR(255),
+            description      TEXT,
+            blockchain_hash  VARCHAR(66),
+            old_data_hash    VARCHAR(66),
+            new_data_hash    VARCHAR(66),
+            block_number     BIGINT,
+            ip_address       VARCHAR(50),
+            created_at       TIMESTAMPTZ DEFAULT NOW()
+        )"#,
+        "CREATE INDEX IF NOT EXISTS idx_activity_blockchain_activity_id ON activity_blockchain_log(activity_id)",
+        "CREATE INDEX IF NOT EXISTS idx_activity_blockchain_hash ON activity_blockchain_log(blockchain_hash)",
+        "CREATE INDEX IF NOT EXISTS idx_activity_blockchain_table ON activity_blockchain_log(table_affected)",
+        "CREATE INDEX IF NOT EXISTS idx_activity_blockchain_created_at ON activity_blockchain_log(created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_blockchain_tx_tx_hash ON blockchain_transactions(tx_hash)",
     ];
 
     for stmt in statements {
