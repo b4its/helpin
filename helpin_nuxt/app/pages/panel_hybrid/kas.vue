@@ -278,13 +278,20 @@ ChartJS.register(Title, Tooltip, Legend, BarElement, LineElement, PointElement, 
 
 const isSidebarOpen = ref(false)
 const searchTx = ref('')
+const loading = ref(false)
+
+// ==========================================
+// API COMPOSABLES
+// ==========================================
+const { getBalance, recordExpense, recordIncome, getReport } = useFinance()
+const { formatRupiah, formatNumber, formatDateTime, parseNumber } = useFormat()
+const toast = useToast()
 
 // ==========================================
 // STATE & LOGIKA MODAL MUTASI
 // ==========================================
 const isModalOpen = ref(false)
 
-// Format tanggal hari ini (YYYY-MM-DD)
 const getTodayDate = () => {
   const today = new Date();
   return today.toISOString().split('T')[0];
@@ -315,7 +322,6 @@ const closeModal = () => {
   }, 300)
 }
 
-// Opsi dropdown dinamis berdasarkan Debit/Kredit
 const availableCategories = computed(() => {
   if (formMutasi.value.type === 'debit') {
     return ['Penjualan POS', 'Penjualan Besar', 'Modal/Suntikan', 'Pendapatan Lain']
@@ -324,58 +330,99 @@ const availableCategories = computed(() => {
   }
 })
 
-// Eksekusi Simpan Data ke Array (Programmatis)
-const saveTransaction = () => {
+const saveTransaction = async () => {
   if (!formMutasi.value.amount || !formMutasi.value.category || !formMutasi.value.description) {
-    alert("Harap lengkapi Nominal, Kategori, dan Keterangan!")
+    toast.warning('Data belum lengkap', 'Lengkapi nominal, kategori, dan keterangan')
     return
   }
 
-  const numericAmount = Number(formMutasi.value.amount)
-  
-  // Mengambil saldo terakhir untuk diakumulasikan
-  const lastBalance = transactions.value.length > 0 
-    ? transactions.value[transactions.value.length - 1].balance 
-    : 0
+  loading.value = true
+  try {
+    const numericAmount = Number(formMutasi.value.amount)
+    const isDebit = formMutasi.value.type === 'debit'
 
-  const newBalance = formMutasi.value.type === 'debit'
-    ? lastBalance + numericAmount
-    : lastBalance - numericAmount
+    const payload = {
+      amount: numericAmount,
+      category: formMutasi.value.category,
+      description: formMutasi.value.description
+    }
 
-  // Format tanggal ke ID-Format ("06 Jun 2026")
-  const rawDate = new Date(formMutasi.value.date)
-  const formattedDate = rawDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+    // Debit = uang masuk (pemasukan), Kredit = uang keluar (pengeluaran)
+    if (isDebit) await recordIncome(payload)
+    else await recordExpense(payload)
 
-  // Construct Data Baru
-  const newTx = {
-    id: `TRX-${Math.floor(Math.random() * 900) + 700}`, // Mockup ID
-    date: formattedDate,
-    description: formMutasi.value.description,
-    pic: 'Admin Suki SUPER',
-    category: formMutasi.value.category,
-    type: formMutasi.value.type,
-    amount: numericAmount,
-    balance: newBalance
+    // Update local state
+    const lastBalance = transactions.value.length > 0 
+      ? transactions.value[transactions.value.length - 1].balance 
+      : 0
+
+    const newBalance = isDebit
+      ? lastBalance + numericAmount
+      : lastBalance - numericAmount
+
+    const rawDate = new Date(formMutasi.value.date)
+    const formattedDate = rawDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+
+    const newTx = {
+      id: `TRX-${Math.floor(Math.random() * 900) + 700}`,
+      date: formattedDate,
+      description: formMutasi.value.description,
+      pic: 'Admin',
+      category: formMutasi.value.category,
+      type: formMutasi.value.type,
+      amount: numericAmount,
+      balance: newBalance
+    }
+
+    transactions.value.push(newTx)
+    toast.success(isDebit ? 'Uang masuk dicatat' : 'Uang keluar dicatat', formatRupiah(numericAmount))
+    closeModal()
+  } catch (e) {
+    console.error('Failed to save transaction:', e)
+    toast.error('Gagal mencatat mutasi', e?.data?.error?.message || e?.data?.message)
+  } finally {
+    loading.value = false
   }
-
-  // Masukkan ke State
-  transactions.value.push(newTx)
-  
-  // Tutup Modal
-  closeModal()
 }
 
 // ==========================================
 // DATA TRANSAKSI
 // ==========================================
-const transactions = ref([
-  { id: 'TRX-601', date: '01 Jun 2026', description: 'Saldo Awal Bulan', pic: 'Sistem', category: 'Modal', type: 'debit', amount: 120000000, balance: 120000000 },
-  { id: 'TRX-602', date: '02 Jun 2026', description: 'Penjualan POS Kasir #001', pic: 'Admin Suki SUPER', category: 'Penjualan', type: 'debit', amount: 659940, balance: 120659940 },
-  { id: 'TRX-603', date: '03 Jun 2026', description: 'Pembelian Stok Pupuk (50 Sak)', pic: 'Divisi Gudang', category: 'Pembelian Stok', type: 'kredit', amount: 3500000, balance: 117159940 },
-  { id: 'TRX-604', date: '04 Jun 2026', description: 'Pembayaran Listrik & Air Koperasi', pic: 'Keuangan', category: 'Operasional', type: 'kredit', amount: 850000, balance: 116309940 },
-  { id: 'TRX-605', date: '05 Jun 2026', description: 'Penjualan Partai (Hasil Panen Padi)', pic: 'Admin Suki SUPER', category: 'Penjualan Besar', type: 'debit', amount: 15400000, balance: 131709940 },
-  { id: 'TRX-606', date: '05 Jun 2026', description: 'Distribusi Bagi Hasil Petani', pic: 'Keuangan', category: 'Bagi Hasil', type: 'kredit', amount: 7209940, balance: 124500000 },
-])
+const transactions = ref([])
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    const [balanceRes, reportRes] = await Promise.allSettled([
+      getBalance(),
+      getReport()
+    ])
+
+    if (reportRes.status === 'fulfilled' && reportRes.value) {
+      let runningBalance = 0
+      transactions.value = (reportRes.value || []).map(item => {
+        const isDebit = (item.record_type || item.type) === 'pemasukan'
+        runningBalance = item.balance_after || (isDebit ? runningBalance + item.amount : runningBalance - item.amount)
+        return {
+          id: item.id || `TRX-${Math.floor(Math.random() * 900) + 100}`,
+          date: new Date(item.recorded_at || item.date || Date.now()).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+          description: item.description || '',
+          pic: 'Admin',
+          category: item.category || '',
+          type: isDebit ? 'debit' : 'kredit',
+          amount: item.amount,
+          balance: runningBalance
+        }
+      })
+    }
+    
+    // If no data from API, we still show empty state gracefully
+  } catch (e) {
+    console.error('Failed to load financial data:', e)
+  } finally {
+    loading.value = false
+  }
+})
 
 const sortedTransactions = computed(() => {
   return [...transactions.value].reverse()
@@ -404,10 +451,6 @@ const summary = computed(() => {
 
   return { totalDebit, totalKredit, saldoAkhir }
 })
-
-const formatRupiah = (value) => {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value)
-}
 
 // ==========================================
 // KONFIGURASI CHART.JS

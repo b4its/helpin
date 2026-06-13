@@ -15,14 +15,14 @@
           </div>
           <div>
             <h1 class="text-xl md:text-2xl font-black tracking-tight">Koperasi Agro Helpin Terpadu</h1>
-            <p class="text-xs md:text-sm text-green-300 font-medium mt-0.5">Badan Hukum: 123.45/BH/KDK/2026 | Saldo Kas: Rp 124.500.000</p>
+            <p class="text-xs md:text-sm text-green-300 font-medium mt-0.5">Badan Hukum: 123.45/BH/KDK/2026 | Saldo Kas: {{ formatRupiah(kasBalance) }}</p>
           </div>
         </div>
         <div class="flex items-center gap-3 bg-[#143222] px-4 py-2 rounded-xl border border-white/10">
           <ClockIcon class="w-5 h-5 text-green-400" />
           <div class="text-right">
             <p class="text-xs text-gray-400 uppercase font-bold tracking-wider">Shift Kasir</p>
-            <p class="text-sm font-black text-white">Admin Suki SUPER</p>
+            <p class="text-sm font-black text-white">{{ user?.name || 'Kasir' }}</p>
           </div>
         </div>
       </header>
@@ -247,7 +247,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { 
   MenuIcon, BuildingIcon, ClockIcon, SearchIcon, PlusIcon,
   ShoppingCartIcon, ArchiveIcon, CreditCardIcon, XIcon
@@ -256,31 +256,69 @@ import {
 import SidebarHybrid from '~/components/SidebarHybrid.vue'
 
 const isSidebarOpen = ref(false)
+const loading = ref(false)
+
+// ==========================================
+// API COMPOSABLES
+// ==========================================
+const { listProducts: fetchProducts, listCategories: fetchCategories } = useProducts()
+const { createTransaction } = usePos()
+const { getBalance } = useFinance()
+const { user } = useAuth()
+const { formatRupiah } = useFormat()
+const toast = useToast()
 
 const categories = ref([
   { id: 'semua', label: 'Semua Produk' },
-  { id: 'pangan', label: 'Agro Pangan' },
-  { id: 'ternak', label: 'Hasil Ternak' }
 ])
 const activeCategory = ref('semua')
 const searchQuery = ref('')
+const kasBalance = ref(0)
 
-const products = ref([
-  { id: 'PGN-001', name: 'Beras Organik Mapan', category: 'pangan', price: 75000, stock: 45, unit: '5kg', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=400&q=80' },
-  { id: 'PGN-002', name: 'Jagung Manis Bonanza', category: 'pangan', price: 12000, stock: 120, unit: '1kg', image: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=400&q=80' },
-  { id: 'TRN-001', name: 'Telur Ayam Omega 3', category: 'ternak', price: 32000, stock: 80, unit: '1kg', image: 'https://images.unsplash.com/photo-1506976785307-8732e854ad03?auto=format&fit=crop&w=400&q=80' },
-  { id: 'TRN-002', name: 'Pisang Segar', category: 'ternak', price: 135000, stock: 15, unit: '1kg', image: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?auto=format&fit=crop&w=400&q=80' },
-  { id: 'PGN-003', name: 'Cabai Rawit Merah', category: 'pangan', price: 45000, stock: 25, unit: '1kg', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5Obf9469jpUOyLMX3Nk6kXXYc2-1ajlcVOA&s' },
-  { id: 'TRN-003', name: 'Susu Sapi Segar Literan', category: 'ternak', price: 18000, stock: 30, unit: '1L', image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=400&q=80' },
-  { id: 'PGN-004', name: 'Pupuk Kompos Koperasi', category: 'pangan', price: 25000, stock: 200, unit: '10kg', image: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400&q=80' },
-  { id: 'TRN-004', name: 'Pakan Ayam Petelur', category: 'ternak', price: 350000, stock: 10, unit: '50kg', image: 'https://images.unsplash.com/photo-1501430654243-c934cec2e1c0?auto=format&fit=crop&w=400&q=80' },
-])
+const products = ref([])
+
+// Map API product to POS UI model
+const mapPosProduct = (item) => ({
+  id: item.id,
+  name: item.name,
+  category: item.product_type || item.type || item.category || 'pangan',
+  price: item.price,
+  stock: item.stock || 999,
+  unit: item.unit || '1kg',
+  image: item.image_url || item.image || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400&q=80'
+})
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    const [productsRes, categoriesRes, balanceRes] = await Promise.allSettled([
+      fetchProducts(),
+      fetchCategories(),
+      getBalance()
+    ])
+
+    if (productsRes.status === 'fulfilled' && productsRes.value) {
+      products.value = productsRes.value.map(mapPosProduct)
+    }
+    if (categoriesRes.status === 'fulfilled' && categoriesRes.value) {
+      const apiCats = categoriesRes.value.map(c => ({ id: c.id || c.name?.toLowerCase(), label: c.name }))
+      categories.value = [{ id: 'semua', label: 'Semua Produk' }, ...apiCats]
+    }
+    if (balanceRes.status === 'fulfilled' && balanceRes.value) {
+      kasBalance.value = balanceRes.value.balance || balanceRes.value.amount || 0
+    }
+  } catch (e) {
+    console.error('Failed to load POS data:', e)
+  } finally {
+    loading.value = false
+  }
+})
 
 const filteredProducts = computed(() => {
   return products.value.filter(p => {
     const matchCat = activeCategory.value === 'semua' || p.category === activeCategory.value
     const matchSearch = p.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                        p.id.toLowerCase().includes(searchQuery.value.toLowerCase())
+                        (p.id || '').toString().toLowerCase().includes(searchQuery.value.toLowerCase())
     return matchCat && matchSearch
   })
 })
@@ -288,7 +326,7 @@ const filteredProducts = computed(() => {
 const cart = ref([])
 
 const addToCart = (product) => {
-  if (product.stock <= 0) return alert('Stok produk habis!')
+  if (product.stock <= 0) return toast.warning('Stok habis', product.name)
   
   const existing = cart.value.find(item => item.id === product.id)
   if (existing) {
@@ -328,10 +366,6 @@ const subtotal = computed(() => {
 const tax = computed(() => subtotal.value * 0.02)
 const total = computed(() => subtotal.value + tax.value)
 
-const formatRupiah = (value) => {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value)
-}
-
 // State untuk Data Asli
 const isPaymentModalOpen = ref(false)
 const amountTendered = ref(null)
@@ -343,7 +377,6 @@ const formattedAmountTendered = computed({
     return amountTendered.value.toLocaleString('id-ID')
   },
   set(newValue) {
-    // Hapus semua karakter yang bukan angka
     const cleanValue = newValue.replace(/\D/g, '')
     amountTendered.value = cleanValue ? parseInt(cleanValue, 10) : null
   }
@@ -365,23 +398,46 @@ const closePaymentModal = () => {
   amountTendered.value = null
 }
 
-const confirmPayment = () => {
+const confirmPayment = async () => {
   if (changeAmount.value < 0) return 
 
-  const payload = {
-    items: cart.value,
-    subtotal: subtotal.value,
-    tax: tax.value,
-    total: total.value,
-    amountTendered: Number(amountTendered.value),
-    change: changeAmount.value,
-    timestamp: new Date().toISOString()
+  loading.value = true
+  try {
+    const payload = {
+      items: cart.value.map(item => ({
+        product_id: item.id,
+        name: item.name,
+        quantity: item.qty,
+        price: item.price
+      })),
+      subtotal: subtotal.value,
+      tax: tax.value,
+      total: total.value,
+      amount_tendered: Number(amountTendered.value),
+      change_amount: changeAmount.value
+    }
+    
+    await createTransaction(payload)
+    
+    clearCart()
+    closePaymentModal()
+    toast.success('Transaksi berhasil', `Total ${formatRupiah(total.value)}`)
+    // Segarkan saldo kas & stok produk setelah transaksi berhasil
+    try {
+      const [balRes, prodRes] = await Promise.allSettled([getBalance(), fetchProducts()])
+      if (balRes.status === 'fulfilled' && balRes.value) {
+        kasBalance.value = balRes.value.balance || balRes.value.amount || 0
+      }
+      if (prodRes.status === 'fulfilled' && prodRes.value) {
+        products.value = prodRes.value.map(mapPosProduct)
+      }
+    } catch { /* non-fatal */ }
+  } catch (e) {
+    console.error('Failed to process transaction:', e)
+    toast.error('Gagal memproses transaksi', e?.data?.error?.message || e?.data?.message)
+  } finally {
+    loading.value = false
   }
-  
-  console.log("PAYLOAD SIAP DI-COMMIT KE queue_keranjang:", JSON.stringify(payload, null, 2))
-  
-  clearCart()
-  closePaymentModal()
 }
 </script>
 

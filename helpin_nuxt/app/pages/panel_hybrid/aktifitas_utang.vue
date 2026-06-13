@@ -473,11 +473,12 @@ const submitPayment = async () => {
       running_balance: summary.value.sisaUtang - Number(formPay.value.amount)
     }
     debtLedger.value.push(newRecord)
+    useToast().success('Pembayaran dicatat', useFormat().formatRupiah(Number(formPay.value.amount)))
     closeModal()
     formPay.value = { amount: null, related_invoice: '', date: new Date().toISOString().split('T')[0] }
   } catch (e) {
     console.error('Failed to record payment:', e)
-    alert('Gagal mencatat pembayaran. Silakan coba lagi.')
+    useToast().error('Gagal mencatat pembayaran', e?.data?.error?.message || e?.data?.message)
   } finally {
     loading.value = false
   }

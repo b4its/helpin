@@ -10,8 +10,8 @@
 
         <div class="px-8 mb-8">
           <p class="text-[10px] text-white/60 flex items-center gap-2 mb-1"><span class="w-2 h-2 rounded-full bg-[#10B981]"></span> PENGGUNA AKTIF</p>
-          <h2 class="text-xl font-bold text-white mb-2">Karyawan Suki</h2>
-          <span class="inline-block px-3 py-1 bg-[#166534] text-white text-[10px] font-bold rounded tracking-widest">KARYAWAN</span>
+          <h2 class="text-xl font-bold text-white mb-2 truncate">{{ user?.name || 'Karyawan' }}</h2>
+          <span class="inline-block px-3 py-1 bg-[#166534] text-white text-[10px] font-bold rounded tracking-widest uppercase">{{ user?.role || 'karyawan' }}</span>
         </div>
 
         <nav class="flex flex-col pl-5 space-y-1">
@@ -33,9 +33,9 @@
       <div class="p-6 md:p-8 bg-[#143D25] flex items-center justify-between flex-shrink-0">
         <div>
           <p class="text-[10px] text-white/60 flex items-center gap-2 mb-1"><span class="w-2 h-2 rounded-full bg-[#10B981]"></span> LOGGED IN AS</p>
-          <h3 class="text-sm font-bold text-white m-0">Admin Suki SUPER</h3>
+          <h3 class="text-sm font-bold text-white m-0 truncate">{{ user?.name || 'Karyawan' }}</h3>
         </div>
-        <button class="p-1 hover:bg-red-500/20 rounded-lg transition">
+        <button @click="onLogout" class="p-1 hover:bg-red-500/20 rounded-lg transition">
           <LogOutIcon class="w-6 h-6 text-red-400" />
         </button>
       </div>
@@ -47,24 +47,26 @@
 
 <script setup>
 import { 
-  LayoutDashboardIcon, UsersIcon, TruckIcon, PackageIcon, 
+  LayoutDashboardIcon, TruckIcon, PackageIcon, 
   ShoppingCartIcon, FileTextIcon, WalletIcon, LogOutIcon,
-  RefreshCwIcon // <-- 1. Import ikon baru di sini
+  RefreshCwIcon
 } from 'lucide-vue-next'
 
 defineProps({ isOpen: Boolean })
 defineEmits(['close'])
 
+const { user, logout } = useAuth()
+const onLogout = () => logout()
+
+// Karyawan: tanpa manajemen Pengguna/Karyawan, Aktivitas, & Custom Ecommerce (khusus admin)
 const menus = [
-  // Pastikan 'path' di bawah ini sama PERSIS dengan nama file kamu (tanpa .vue)
   { id: 'dashboard', label: 'Dashboard', path: '/panel_karyawan/dashboard_karyawan', icon: LayoutDashboardIcon },
-  { id: 'pengguna', label: 'Pengguna', path: '/panel_karyawan/pengguna_karyawan', icon: UsersIcon },
   { id: 'supplier', label: 'Supplier', path: '/panel_karyawan/supplier_karyawan', icon: TruckIcon },
   { id: 'produk', label: 'Produk', path: '/panel_karyawan/produk_karyawan', icon: PackageIcon },
   { id: 'kasir', label: 'Kasir', path: '/panel_karyawan/kasir_karyawan', icon: ShoppingCartIcon },
   { id: 'transaksi', label: 'Transaksi', path: '/panel_karyawan/transaksi_karyawan', icon: FileTextIcon },
   { id: 'kas', label: 'Kas', path: '/panel_karyawan/kas_karyawan', icon: WalletIcon },
-  { id: 'hybrid', label: 'Hybrid', path: '/panel_hybrid/dashboard', icon: RefreshCwIcon } // <-- 2. Tambahkan menu Hybrid di paling bawah
+  { id: 'hybrid', label: 'Hybrid', path: '/panel_hybrid/dashboard', icon: RefreshCwIcon },
 ]
 </script>
 

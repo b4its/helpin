@@ -475,10 +475,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
 import { useHead } from '#imports'
 
 useHead({ link: [{ rel: 'stylesheet', href: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' }] })
+
+// ==========================================
+// API COMPOSABLE
+// ==========================================
+const { listOrders: fetchOrders, getCart: fetchCart, addToCart: apiAddToCart, updateCartQty: apiUpdateCartQty, removeFromCart: apiRemoveFromCart, checkout: apiCheckout } = useProducts()
 
 // ==========================================
 // 1. ARSITEKTUR DATA (Strict TypeScript)
@@ -496,9 +501,10 @@ interface IOrder {
 }
 
 // ==========================================
-// 2. MOCK DATA (Gambar Reliable & Format Logis)
+// 2. REACTIVE STATE
 // ==========================================
 const activeTab = ref<OrderStatus>('all')
+const loading = ref(false)
 const statusTabs = [
   { label: 'Semua', value: 'all' }, { label: 'Belum Bayar', value: 'pending' },
   { label: 'Dikemas', value: 'processing' }, { label: 'Dikirim', value: 'shipping' },
@@ -511,42 +517,76 @@ const paymentCategoriesList = [
   { name: 'Kredit/Debit', methods: ['Visa / Mastercard'] }
 ]
 
-const orderData = ref<IOrder[]>([
-  {
-    id: 'ord-001', invoice: 'INV/20260604/KOP/001', date: new Date('2026-06-04T14:30:00'), status: 'shipping',
-    shippingName: 'Ahmad D.', shippingAddress: 'Jl. Pemuda No 14, Samarinda, Kaltim', lat: -0.4718, lng: 117.1536,
-    shippingOption: { name: 'J&T Express', estimate: '4 - 5 Juni' }, shippingFee: 20000, paymentMethod: 'Transfer Bank BCA', discount: 0,
-    items: [
-      { product: { id: 1, name: 'Beras Merah Pulen Kualitas 1', unit: '5 Kg', price: 75000, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=300&q=80' }, quantity: 1 },
-      { product: { id: 2, name: 'Susu Sapi Murni Pasteurisasi', unit: '1 Liter', price: 15000, image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=300&q=80' }, quantity: 2 },
-    ],
-    totalAmount: 125000 // 75000 + 30000 + 20000 ongkir
-  },
-  {
-    id: 'ord-002', invoice: 'INV/20260605/KOP/112', date: new Date('2026-06-05T08:00:00'), status: 'pending',
-    shippingName: 'Ahmad D.', shippingAddress: 'Jl. Pahlawan No. 12, Samarinda', lat: -0.4718, lng: 117.1536,
-    shippingOption: { name: 'Kurir Koperasi (Lokal)', estimate: '1 Hari' }, shippingFee: 15000, paymentMethod: '', discount: 0,
-    items: [
-      { product: { id: 3, name: 'Tomat Cherry Segar Organik', unit: '500 Gram', price: 18500, image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80' }, quantity: 4 }
-    ],
-    totalAmount: 89000 // 74000 + 15000 ongkir
-  },
-  {
-    id: 'ord-003', invoice: 'INV/20260602/KOP/045', date: new Date('2026-06-02T11:00:00'), status: 'completed',
-    shippingName: 'Ahmad D.', shippingAddress: 'Jl. Ahmad Yani No. 8, Bontang', lat: 0.1328, lng: 117.4725,
-    shippingOption: { name: 'J&T Express', estimate: '2 Hari' }, shippingFee: 18000, paymentMethod: 'Gopay', discount: 12,
-    items: [
-      { product: { id: 4, name: 'Telur Ayam Kampung Asli', unit: '1 Kg', price: 32000, image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=300&q=80' }, quantity: 2 },
-      { product: { id: 5, name: 'Menir Jagung Super Halus', unit: '500 Gram', price: 23000, image: 'https://images.unsplash.com/photo-1600333858713-3e1a6c429eb9?auto=format&fit=crop&w=300&q=80' }, quantity: 1 }
-    ],
-    totalAmount: 94560 // 87000 diskon 12% = 76560 + 18000
-  }
-])
+const orderData = ref<IOrder[]>([])
+const cartItems = ref<IOrderItem[]>([])
 
-// Mock Cart Database
-const cartItems = ref<IOrderItem[]>([
-  { product: { id: 101, name: 'Sayur Sawi Hijau', unit: '250 Gram', price: 5000, image: 'https://images.unsplash.com/photo-1583258562725-b4676afab8f1?auto=format&fit=crop&w=300&q=80' }, quantity: 3 }
-])
+// Map API order to UI model
+const mapOrder = (item: any): IOrder => ({
+  id: item.id,
+  invoice: item.invoice || `INV/${item.id?.substring(0, 8).toUpperCase()}`,
+  date: new Date(item.created_at || item.date || Date.now()),
+  status: mapApiStatus(item.status),
+  items: (item.items || item.order_items || []).map((oi: any) => ({
+    product: {
+      id: oi.product_id || oi.product?.id,
+      name: oi.product_name || oi.product?.name || oi.name || 'Produk',
+      price: oi.price_at_purchase || oi.price || oi.product?.price || 0,
+      unit: oi.unit || oi.product?.unit || '1 unit',
+      image: oi.image_url || oi.product?.image || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=300&q=80'
+    },
+    quantity: oi.quantity || 1
+  })),
+  totalAmount: item.total_amount || item.totalAmount || 0,
+  shippingName: item.shipping_name || 'User',
+  shippingAddress: item.shipping_address || '',
+  lat: -0.4718,
+  lng: 117.1536,
+  shippingOption: { name: 'Kurir Koperasi', estimate: '1-2 Hari' },
+  shippingFee: 15000,
+  paymentMethod: item.payment_method || '',
+  discount: 0
+})
+
+const mapApiStatus = (status: string): OrderStatus => {
+  const map: Record<string, OrderStatus> = {
+    'Menunggu Pembayaran': 'pending',
+    'Diproses': 'processing',
+    'Dikirim': 'shipping',
+    'Selesai': 'completed',
+    'Dibatalkan': 'cancelled'
+  }
+  return map[status] || (status as OrderStatus) || 'pending'
+}
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    const [ordersRes, cartRes] = await Promise.allSettled([
+      fetchOrders(),
+      fetchCart()
+    ])
+    
+    if (ordersRes.status === 'fulfilled' && ordersRes.value) {
+      orderData.value = ordersRes.value.map(mapOrder)
+    }
+    if (cartRes.status === 'fulfilled' && cartRes.value) {
+      cartItems.value = (cartRes.value || []).map((item: any) => ({
+        product: {
+          id: item.product_id || item.id,
+          name: item.product_name || item.name || 'Produk',
+          price: item.price || 0,
+          unit: item.unit || '1 unit',
+          image: item.image_url || item.image || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=300&q=80'
+        },
+        quantity: item.quantity || 1
+      }))
+    }
+  } catch (e) {
+    console.error('Failed to load orders:', e)
+  } finally {
+    loading.value = false
+  }
+})
 
 // ==========================================
 // 3. LOGIKA KERANJANG (CART DRAWER)
@@ -666,14 +706,25 @@ const closeCheckoutModal = () => {
   }
 }
 
-const processCheckout = () => {
+const processCheckout = async () => {
   if (selectedCheckoutOrder.value) {
-    const targetId = selectedCheckoutOrder.value.id
-    const targetOrder = orderData.value.find(o => o.id === targetId)
-    if (targetOrder) {
-      targetOrder.status = 'processing'
-      targetOrder.paymentMethod = checkoutPaymentMethod.value
-      targetOrder.shippingAddress = checkoutAddressDetail.value ? `${checkoutAddress.value} (${checkoutAddressDetail.value})` : checkoutAddress.value
+    loading.value = true
+    try {
+      const fullAddress = checkoutAddressDetail.value ? `${checkoutAddress.value} (${checkoutAddressDetail.value})` : checkoutAddress.value
+      await apiCheckout(fullAddress)
+      
+      const targetId = selectedCheckoutOrder.value.id
+      const targetOrder = orderData.value.find(o => o.id === targetId)
+      if (targetOrder) {
+        targetOrder.status = 'processing'
+        targetOrder.paymentMethod = checkoutPaymentMethod.value
+        targetOrder.shippingAddress = fullAddress
+      }
+    } catch (e) {
+      console.error('Failed to process checkout:', e)
+      useToast().error('Gagal memproses pembayaran', e?.data?.error?.message || e?.data?.message)
+    } finally {
+      loading.value = false
     }
   }
   closeCheckoutModal()

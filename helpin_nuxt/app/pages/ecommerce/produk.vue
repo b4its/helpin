@@ -272,10 +272,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 // ==========================================
-// 1. ARSITEKTUR DATA
+// 1. API COMPOSABLES
+// ==========================================
+const { listProducts: fetchProducts, listCategories: fetchCategories, addToCart: apiAddToCart, getCart: fetchCart, updateCartQty: apiUpdateCartQty, removeFromCart: apiRemoveFromCart } = useProducts()
+
+// ==========================================
+// 2. ARSITEKTUR DATA
 // ==========================================
 interface ICategory {
   id: string;
@@ -285,8 +290,8 @@ interface ICategory {
 }
 
 interface IProduct {
-  id: number;
-  categoryId: string; // Relasi ke Kategori
+  id: number | string;
+  categoryId: string;
   name: string;
   price: number;
   unit: string;
@@ -295,34 +300,67 @@ interface IProduct {
   location: string;
   image: string;
   description: string;
-  createdAt: Date; // Untuk pengurutan "Terbaru"
+  createdAt: Date;
 }
 
-// Nantinya state keranjang ini disimpan ke tabel 'queue_keranjang' secara persisten di database
 interface ICartItem {
   product: IProduct;
   quantity: number;
+  cartItemId?: string;
 }
 
 // ==========================================
-// 2. MOCK API DATA
+// 3. REACTIVE STATE
 // ==========================================
-const categoryData = ref<ICategory[]>([
-  { id: 'c1', name: 'Sayur Mayur', icon: 'lucide:carrot', itemCount: 124 },
-  { id: 'c2', name: 'Hasil Ternak', icon: 'lucide:beef', itemCount: 85 },
-  { id: 'c3', name: 'Bibit & Pupuk', icon: 'lucide:sprout', itemCount: 42 },
-  { id: 'c4', name: 'Alat Tani', icon: 'lucide:tractor', itemCount: 18 },
-])
+const categoryData = ref<ICategory[]>([])
+const productData = ref<IProduct[]>([])
+const loading = ref(false)
 
-const productData = ref<IProduct[]>([
-  { id: 1, categoryId: 'c1', name: 'Tomat Cherry Segar Organik', price: 18500, unit: '500g', type: 'Pertanian', seller: 'Kop. Makmur Jaya', location: 'Samarinda', image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?q=80&w=400&auto=format&fit=crop', description: 'Tomat cherry organik ditanam tanpa pestisida kimia. Dipanen pagi hari.', createdAt: new Date('2026-06-05T08:00:00') },
-  { id: 2, categoryId: 'c2', name: 'Telur Ayam Kampung Asli', price: 32000, unit: '1 Kg', type: 'Peternakan', seller: 'Pak Budi Farm', location: 'Tenggarong', image: 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?q=80&w=400&auto=format&fit=crop', description: 'Telur ayam kampung dari ayam yang diumbar bebas. Kaya omega-3.', createdAt: new Date('2026-06-04T10:00:00') },
-  { id: 3, categoryId: 'c1', name: 'Beras Merah Pulen Kualitas 1', price: 75000, unit: '5 Kg', type: 'Pertanian', seller: 'Kelompok Tani Harapan', location: 'Kutai Kartanegara', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?q=80&w=400&auto=format&fit=crop', description: 'Beras merah pilihan dengan indeks glikemik rendah. Tekstur pulen.', createdAt: new Date('2026-06-03T14:00:00') },
-  { id: 4, categoryId: 'c2', name: 'Susu Sapi Murni Pasteurisasi', price: 15000, unit: '1 Liter', type: 'Peternakan', seller: 'Sukamaju Dairy', location: 'Balikpapan', image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?q=80&w=400&auto=format&fit=crop', description: 'Susu sapi perah segar tanpa bahan pengawet. Pasteurisasi modern.', createdAt: new Date('2026-06-05T06:00:00') },
-])
+// Helper to map API responses to UI model
+const mapCategory = (item: any): ICategory => ({
+  id: item.id,
+  name: item.name,
+  icon: item.icon || 'lucide:package',
+  itemCount: item.item_count || item.itemCount || 0
+})
+
+const mapProduct = (item: any): IProduct => ({
+  id: item.id,
+  categoryId: item.category_id || item.categoryId || '',
+  name: item.name,
+  price: item.price,
+  unit: item.unit || '1 Kg',
+  type: item.product_type || item.type || 'Pertanian',
+  seller: item.seller_name || item.seller || 'Koperasi',
+  location: item.location || '',
+  image: item.image_url || item.image || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400&q=80',
+  description: item.description || '',
+  createdAt: new Date(item.created_at || item.createdAt || Date.now())
+})
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    const [categories, products] = await Promise.allSettled([
+      fetchCategories(),
+      fetchProducts()
+    ])
+    
+    if (categories.status === 'fulfilled' && categories.value) {
+      categoryData.value = categories.value.map(mapCategory)
+    }
+    if (products.status === 'fulfilled' && products.value) {
+      productData.value = products.value.map(mapProduct)
+    }
+  } catch (e) {
+    console.error('Failed to load product data:', e)
+  } finally {
+    loading.value = false
+  }
+})
 
 // ==========================================
-// 3. LOGIKA FILTER & PENCARIAN (Manual Programmatic)
+// 4. LOGIKA FILTER & PENCARIAN
 // ==========================================
 const searchQuery = ref('')
 const activeCategory = ref<string | null>(null)
@@ -334,32 +372,27 @@ const resetFilters = () => {
   sortBy.value = 'newest'
 }
 
-// Logika terprogram manual untuk filtering array produk
 const filteredProducts = computed(() => {
   let result = productData.value
 
-  // 1. Filter Kategori
   if (activeCategory.value !== null) {
     result = result.filter(p => p.categoryId === activeCategory.value)
   }
 
-  // 2. Filter Pencarian Teks
   if (searchQuery.value.trim() !== '') {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(p => p.name.toLowerCase().includes(query))
   }
 
-  // 3. Sorting
   return result.slice().sort((a, b) => {
     if (sortBy.value === 'price_asc') return a.price - b.price
     if (sortBy.value === 'price_desc') return b.price - a.price
-    // Default: newest
     return b.createdAt.getTime() - a.createdAt.getTime()
   })
 })
 
 // ==========================================
-// 4. LOGIKA MODAL DETAIL PRODUK
+// 5. LOGIKA MODAL DETAIL PRODUK
 // ==========================================
 const isProductModalOpen = ref(false)
 const selectedProduct = ref<IProduct | null>(null)
@@ -385,7 +418,7 @@ const closeProductModal = () => {
 }
 
 // ==========================================
-// 5. LOGIKA KERANJANG
+// 6. LOGIKA KERANJANG
 // ==========================================
 const cart = ref<ICartItem[]>([])
 const isCartOpen = ref(false)
@@ -400,7 +433,14 @@ const closeCart = () => {
   toggleBodyScroll(false)
 }
 
-const addToCart = (product: IProduct, qty: number) => {
+const addToCart = async (product: IProduct, qty: number) => {
+  try {
+    await apiAddToCart(String(product.id), qty)
+  } catch (e) {
+    console.error('Failed to add to cart via API:', e)
+  }
+  
+  // Update local state regardless
   const existingItem = cart.value.find(item => item.product.id === product.id)
   if (existingItem) {
     existingItem.quantity += qty
@@ -411,15 +451,32 @@ const addToCart = (product: IProduct, qty: number) => {
   openCart()
 }
 
-const updateCartQty = (productId: number, change: number) => {
+const updateCartQty = async (productId: number | string, change: number) => {
   const item = cart.value.find(item => item.product.id === productId)
   if (item) {
     const newQty = item.quantity + change
-    if (newQty > 0) item.quantity = newQty
+    if (newQty > 0) {
+      item.quantity = newQty
+      if (item.cartItemId) {
+        try {
+          await apiUpdateCartQty(item.cartItemId, newQty)
+        } catch (e) {
+          console.error('Failed to update cart qty:', e)
+        }
+      }
+    }
   }
 }
 
-const removeFromCart = (productId: number) => {
+const removeFromCart = async (productId: number | string) => {
+  const item = cart.value.find(item => item.product.id === productId)
+  if (item?.cartItemId) {
+    try {
+      await apiRemoveFromCart(item.cartItemId)
+    } catch (e) {
+      console.error('Failed to remove from cart:', e)
+    }
+  }
   cart.value = cart.value.filter(item => item.product.id !== productId)
 }
 
@@ -427,7 +484,7 @@ const cartTotalItems = computed(() => cart.value.reduce((total, item) => total +
 const cartTotalPrice = computed(() => cart.value.reduce((total, item) => total + (item.product.price * item.quantity), 0))
 
 // ==========================================
-// 6. UTILS
+// 7. UTILS
 // ==========================================
 const formatRupiah = (price: number) => {
   return new Intl.NumberFormat('id-ID', {

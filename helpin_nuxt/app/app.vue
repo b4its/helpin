@@ -1,8 +1,18 @@
 <template>
   <div>
     <NuxtPage />
+    <ToastHost />
   </div>
 </template>
+
+<script setup>
+import ToastHost from '~/components/ToastHost.vue'
+const { initAuth } = useAuth()
+
+onMounted(async () => {
+  await initAuth()
+})
+</script>
 
 <style>
 /* Reset dasar dan font setup */

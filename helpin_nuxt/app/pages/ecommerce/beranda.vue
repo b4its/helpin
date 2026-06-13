@@ -268,11 +268,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 // ==========================================
-// 1. ARSITEKTUR DATA (Strict TypeScript)
-// Ini adalah cetak biru untuk database integrasi nanti.
+// 1. API COMPOSABLE
+// ==========================================
+const { listProducts: fetchProducts, listCategories: fetchCategories, addToCart: apiAddToCart } = useProducts()
+
+// ==========================================
+// 2. ARSITEKTUR DATA (Strict TypeScript)
 // ==========================================
 
 interface ICategory {
@@ -294,31 +298,72 @@ interface IProduct {
   description: string;
 }
 
-// Model yang nantinya dihubungkan dengan tabel 'queue_keranjang' / session
 interface ICartItem {
   product: IProduct;
   quantity: number;
 }
 
 // ==========================================
-// 2. MOCK API DATA (Pengganti Fetch Database)
+// 3. STATE & DATA LOADING
 // ==========================================
-const categoryData = ref<ICategory[]>([
-  { id: 'c1', name: 'Sayur Mayur', icon: 'lucide:carrot', itemCount: 124 },
-  { id: 'c2', name: 'Hasil Ternak', icon: 'lucide:beef', itemCount: 85 },
-  { id: 'c3', name: 'Bibit & Pupuk', icon: 'lucide:sprout', itemCount: 42 },
-  { id: 'c4', name: 'Alat Tani', icon: 'lucide:tractor', itemCount: 18 },
-])
+const categoryData = ref<ICategory[]>([])
+const productData = ref<IProduct[]>([])
+const loading = ref(false)
 
-const productData = ref<IProduct[]>([
-  { id: 1, name: 'Tomat Cherry Segar Organik', price: 18500, unit: '500g', type: 'Pertanian', seller: 'Kop. Makmur Jaya', location: 'Samarinda', image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?q=80&w=400&auto=format&fit=crop', description: 'Tomat cherry organik ditanam tanpa pestisida kimia. Dipanen pagi hari.' },
-  { id: 2, name: 'Telur Ayam Kampung Asli', price: 32000, unit: '1 Kg', type: 'Peternakan', seller: 'Pak Budi Farm', location: 'Tenggarong', image: 'https://images.unsplash.com/photo-1587486913049-53fc88980cfc?q=80&w=400&auto=format&fit=crop', description: 'Telur ayam kampung dari ayam yang diumbar bebas. Kaya omega-3.' },
-  { id: 3, name: 'Beras Merah Pulen Kualitas 1', price: 75000, unit: '5 Kg', type: 'Pertanian', seller: 'Kelompok Tani Harapan', location: 'Kutai Kartanegara', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?q=80&w=400&auto=format&fit=crop', description: 'Beras merah pilihan dengan indeks glikemik rendah. Tekstur pulen.' },
-  { id: 4, name: 'Susu Sapi Murni Pasteurisasi', price: 15000, unit: '1 Liter', type: 'Peternakan', seller: 'Sukamaju Dairy', location: 'Balikpapan', image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?q=80&w=400&auto=format&fit=crop', description: 'Susu sapi perah segar tanpa bahan pengawet. Pasteurisasi modern.' },
-])
+const iconMap: Record<string, string> = {
+  'Sayur': 'lucide:carrot',
+  'Ternak': 'lucide:beef',
+  'Bibit': 'lucide:sprout',
+  'Pupuk': 'lucide:sprout',
+  'Alat': 'lucide:tractor',
+}
+
+const getIconForCategory = (name: string): string => {
+  for (const [key, icon] of Object.entries(iconMap)) {
+    if (name.toLowerCase().includes(key.toLowerCase())) return icon
+  }
+  return 'lucide:package'
+}
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    const [categories, products] = await Promise.allSettled([
+      fetchCategories(),
+      fetchProducts()
+    ])
+
+    if (categories.status === 'fulfilled' && categories.value) {
+      categoryData.value = categories.value.map((cat: any) => ({
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon || getIconForCategory(cat.name),
+        itemCount: cat.item_count || 0
+      }))
+    }
+
+    if (products.status === 'fulfilled' && products.value) {
+      productData.value = (products.value || []).slice(0, 8).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        price: p.price || 0,
+        unit: p.unit || '1 unit',
+        type: p.product_type || 'Pertanian',
+        seller: p.seller_name || 'Koperasi Helpin',
+        location: p.location || 'Samarinda',
+        image: p.image_url || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=400&q=80',
+        description: p.description || 'Produk segar dari mitra koperasi.'
+      }))
+    }
+  } catch (e) {
+    console.error('Failed to load beranda data:', e)
+  } finally {
+    loading.value = false
+  }
+})
 
 // ==========================================
-// 3. LOGIKA STATE MANAGEMENT: PRODUCT MODAL
+// 4. LOGIKA STATE MANAGEMENT: PRODUCT MODAL
 // ==========================================
 const isProductModalOpen = ref(false)
 const selectedProduct = ref<IProduct | null>(null)
@@ -344,7 +389,7 @@ const closeProductModal = () => {
 }
 
 // ==========================================
-// 4. LOGIKA STATE MANAGEMENT: KERANJANG (CART)
+// 5. LOGIKA STATE MANAGEMENT: KERANJANG (CART)
 // ==========================================
 const cart = ref<ICartItem[]>([])
 const isCartOpen = ref(false)
@@ -359,8 +404,7 @@ const closeCart = () => {
   toggleBodyScroll(false)
 }
 
-const addToCart = (product: IProduct, qty: number) => {
-  // Cek apakah produk sudah ada di keranjang
+const addToCart = async (product: IProduct, qty: number) => {
   const existingItem = cart.value.find(item => item.product.id === product.id)
   
   if (existingItem) {
@@ -369,8 +413,14 @@ const addToCart = (product: IProduct, qty: number) => {
     cart.value.push({ product, quantity: qty })
   }
   
+  // Also call API to persist
+  try {
+    await apiAddToCart(String(product.id), qty)
+  } catch (e) {
+    // Cart updated locally even if API fails
+  }
+  
   closeProductModal()
-  // Opsional: Buka keranjang otomatis setelah menambahkan
   openCart()
 }
 
@@ -386,7 +436,6 @@ const removeFromCart = (productId: number) => {
   cart.value = cart.value.filter(item => item.product.id !== productId)
 }
 
-// Computed Properties untuk kalkulasi Ringkasan Belanja
 const cartTotalItems = computed(() => {
   return cart.value.reduce((total, item) => total + item.quantity, 0)
 })
@@ -396,7 +445,7 @@ const cartTotalPrice = computed(() => {
 })
 
 // ==========================================
-// 5. UTILS
+// 6. UTILS
 // ==========================================
 const formatRupiah = (price: number) => {
   return new Intl.NumberFormat('id-ID', {

@@ -48,10 +48,8 @@
       <input v-model="searchQuery" type="text" placeholder="Cari berdasarkan Tag ID, Ras, atau Nama Ternak..." class="w-full pl-14 pr-6 py-4 bg-white border border-gray-100 rounded-2xl outline-none focus:ring-4 focus:ring-green-500/10 transition-all font-bold text-sm" />
     </div>
     <select v-model="filterCategory" class="px-6 py-4 bg-white border border-gray-100 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-green-500/10">
-      <option value="">Semua Kategori</option>
-      <option value="Sapi">Sapi</option>
-      <option value="Kambing">Kambing</option>
-      <option value="Domba">Domba</option>
+      <option value="">Semua Jenis</option>
+      <option v-for="j in jenisOptions" :key="j" :value="j">{{ j }}</option>
     </select>
   </section>
 
@@ -203,17 +201,37 @@
           <h2 class="text-4xl font-black italic tracking-tighter">{{ isEditMode ? 'Update Biological Meta' : 'New Livestock Registration' }}</h2>
         </div>
         <div class="p-10 space-y-6">
-          <div class="grid grid-cols-2 gap-6">
-            <input v-model="formData.tagId" type="text" placeholder="Tag ID (E.g: BRH-001)" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-green-500/10" />
-            <select v-model="formData.category" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-green-500/10">
-              <option value="Sapi">Sapi</option>
-              <option value="Kambing">Kambing</option>
-              <option value="Domba">Domba</option>
-            </select>
+          <div class="bg-green-50 border border-green-100 rounded-2xl px-4 py-2.5 text-[11px] font-bold text-green-700">
+            ID ternak akan dibuat otomatis oleh sistem berdasarkan jenis ternak.
           </div>
           <div class="grid grid-cols-2 gap-6">
-            <input v-model="formData.breed" type="text" placeholder="Breed / Ras" class="px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl font-bold" />
-            <input v-model.number="formData.weight" type="number" placeholder="Weight (kg)" class="px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl font-bold" />
+            <div>
+              <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Jenis Ternak</label>
+              <select v-model="formData.category" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-green-500/10">
+                <option v-for="j in jenisOptions" :key="j" :value="j">{{ j }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Ras Ternak</label>
+              <input v-model="formData.breed" type="text" placeholder="Cth: Brahman / Etawa / Broiler" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl font-bold" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-6">
+            <div>
+              <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Usia (bulan)</label>
+              <input v-model.number="formData.ageMonths" type="number" min="0" placeholder="Cth: 12" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl font-bold" />
+            </div>
+            <div>
+              <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Berat (kg) — opsional</label>
+              <input v-model.number="formData.weight" type="number" min="0" placeholder="Cth: 45" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl font-bold" />
+            </div>
+          </div>
+          <div>
+            <label class="text-[10px] font-black text-gray-400 uppercase mb-2 block">Kandang (opsional)</label>
+            <select v-model="formData.penId" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl font-bold">
+              <option value="">— Belum ditempatkan —</option>
+              <option v-for="p in penOptions" :key="p.id" :value="p.id">{{ p.name }} ({{ p.pen_type }})</option>
+            </select>
           </div>
           <div class="flex gap-4 pt-6 border-t border-gray-100">
             <button @click="closeModal" class="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black uppercase text-xs">Batal</button>
@@ -249,42 +267,11 @@ const menus = [
 ]
 
 // ==========================================
-// 2. DATA MODEL (CLASS / DTO)
+// 2. API COMPOSABLE
 // ==========================================
-class LivestockModel {
-  constructor(data) {
-    this.id = data.id || `REG-${Math.floor(Math.random() * 9000) + 1000}`;
-    this.tagId = data.tagId;
-    this.category = data.category;
-    this.breed = data.breed;
-    this.weight = parseFloat(data.weight);
-    this.healthStatus = data.healthStatus || 'Sehat';
-    this.healthScore = data.healthScore || 95;
-    this.entryDate = data.entryDate || new Date().toISOString();
-    this.gender = data.gender || 'Jantan';
-    
-    // Intelligence & Sensor Meta
-    this.biometrics = data.biometrics || [
-      { label: 'Avg Heart Rate', value: '72', unit: 'bpm' },
-      { label: 'Body Temp', value: '38.4', unit: '°C' },
-      { label: 'Respiratory', value: '18', unit: 'bpm' },
-      { label: 'Movement', value: '3.2', unit: 'km/d' }
-    ];
-  }
-
-  static fromJSON(json) {
-    return new LivestockModel({
-      id: json.kode_reg,
-      tagId: json.id_tag,
-      category: json.tipe_hewan,
-      breed: json.jenis_ras,
-      weight: json.berat_kg,
-      healthStatus: json.status_medis,
-      healthScore: json.skor_vitalitas,
-      entryDate: json.tgl_masuk
-    });
-  }
-}
+const { list: fetchLivestock, create: createLivestock, update: updateLivestock, remove: removeLivestock } = useLivestock()
+const { list: fetchPens } = usePen()
+const penOptions = ref([])
 
 // ==========================================
 // 3. REACTIVE STATE
@@ -297,18 +284,45 @@ const isEditMode = ref(false)
 const isPassportOpen = ref(false)
 const selectedTernak = ref(null)
 const editingId = ref(null)
+const loading = ref(false)
 
-const formData = reactive({ tagId: '', category: 'Sapi', breed: '', weight: 0 })
+const formData = reactive({ category: 'Mamalia', breed: '', weight: null, ageMonths: null, penId: '' })
+const jenisOptions = ['Unggas', 'Mamalia', 'Ruminansia', 'Serangga', 'Aves', 'Ikan', 'Reptil', 'Lainnya']
 
-onMounted(() => {
-  // Dummy Data JSON
-  const dummyData = [
-    { kode_reg: '2026001', id_tag: 'BRH-001', tipe_hewan: 'Sapi', jenis_ras: 'Brahman', berat_kg: 450.5, status_medis: 'Sehat', skor_vitalitas: 98, tgl_masuk: '2026-01-10' },
-    { kode_reg: '2026002', id_tag: 'LMS-002', tipe_hewan: 'Sapi', jenis_ras: 'Limousin', berat_kg: 520.0, status_medis: 'Observasi', skor_vitalitas: 75, tgl_masuk: '2026-02-15' },
-    { kode_reg: '2026003', id_tag: 'ETW-045', tipe_hewan: 'Kambing', jenis_ras: 'Etawa', berat_kg: 45.2, status_medis: 'Sakit', skor_vitalitas: 40, tgl_masuk: '2026-03-20' },
-  ];
-  livestockList.value = dummyData.map(d => LivestockModel.fromJSON(d));
-});
+// Helper to normalize API response to UI model
+const mapLivestockItem = (item) => ({
+  id: item.id,
+  tagId: item.tag_id || item.tagId,
+  category: item.category,
+  breed: item.breed,
+  weight: item.weight != null ? parseFloat(item.weight) : 0,
+  ageMonths: item.age_months ?? item.ageMonths ?? null,
+  penId: item.pen_id ?? item.penId ?? null,
+  healthStatus: item.health_status || item.healthStatus || 'Sehat',
+  healthScore: item.health_score || item.healthScore || 95,
+  entryDate: item.entry_date || item.entryDate || new Date().toISOString(),
+  gender: item.gender || 'Jantan',
+  biometrics: item.biometrics || [
+    { label: 'Avg Heart Rate', value: '72', unit: 'bpm' },
+    { label: 'Body Temp', value: '38.4', unit: '°C' },
+    { label: 'Respiratory', value: '18', unit: 'bpm' },
+    { label: 'Movement', value: '3.2', unit: 'km/d' }
+  ]
+})
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    const data = await fetchLivestock()
+    livestockList.value = (data || []).map(mapLivestockItem)
+    try { penOptions.value = (await fetchPens()) || [] } catch { penOptions.value = [] }
+  } catch (e) {
+    console.error('Failed to load livestock:', e)
+    livestockList.value = []
+  } finally {
+    loading.value = false
+  }
+})
 
 // ==========================================
 // 4. COMPUTED & LOGIC
@@ -321,12 +335,18 @@ const filteredLivestock = computed(() => {
   });
 });
 
-const quickStats = computed(() => [
-  { label: 'Populasi Aktif', value: livestockList.value.length, status: 'Stabil', alert: false },
-  { label: 'Rerata Berat', value: '338kg', status: '+2%', alert: false },
-  { label: 'Health Index', value: '92%', status: 'Optimal', alert: false },
-  { label: 'Sakit/Waspada', value: '1 Ekor', status: 'Alert', alert: true },
-]);
+const quickStats = computed(() => {
+  const total = livestockList.value.length
+  const avgWeight = total > 0 ? Math.round(livestockList.value.reduce((s, i) => s + i.weight, 0) / total) : 0
+  const sickCount = livestockList.value.filter(i => i.healthStatus === 'Sakit').length
+  const healthyPercent = total > 0 ? Math.round(((total - sickCount) / total) * 100) : 0
+  return [
+    { label: 'Populasi Aktif', value: total, status: 'Stabil', alert: false },
+    { label: 'Rerata Berat', value: `${avgWeight}kg`, status: '+2%', alert: false },
+    { label: 'Health Index', value: `${healthyPercent}%`, status: 'Optimal', alert: false },
+    { label: 'Sakit/Waspada', value: `${sickCount} Ekor`, status: sickCount > 0 ? 'Alert' : 'OK', alert: sickCount > 0 },
+  ]
+});
 
 const bioBasic = computed(() => {
   if (!selectedTernak.value) return {};
@@ -334,6 +354,7 @@ const bioBasic = computed(() => {
     'DNA / Breed': selectedTernak.value.breed,
     'Kategori': selectedTernak.value.category,
     'Jenis Kelamin': selectedTernak.value.gender,
+    'Usia': selectedTernak.value.ageMonths ? selectedTernak.value.ageMonths + ' bulan' : '-',
     'Body Weight': selectedTernak.value.weight + ' KG',
     'Tanggal Masuk': formatDate(selectedTernak.value.entryDate)
   }
@@ -345,10 +366,10 @@ const bioBasic = computed(() => {
 const openModal = (mode, item = null) => {
   if (mode === 'edit' && item) {
     isEditMode.value = true; editingId.value = item.id;
-    Object.assign(formData, { tagId: item.tagId, category: item.category, breed: item.breed, weight: item.weight });
+    Object.assign(formData, { category: item.category, breed: item.breed, weight: item.weight, ageMonths: item.ageMonths, penId: item.penId || '' });
   } else {
     isEditMode.value = false;
-    Object.assign(formData, { tagId: '', category: 'Sapi', breed: '', weight: 0 });
+    Object.assign(formData, { category: 'Mamalia', breed: '', weight: null, ageMonths: null, penId: '' });
   }
   isModalOpen.value = true;
 }
@@ -360,19 +381,52 @@ const viewFullPassport = (item) => {
 
 const closeModal = () => isModalOpen.value = false;
 
-const saveData = () => {
-  if (isEditMode.value) {
-    const idx = livestockList.value.findIndex(i => i.id === editingId.value);
-    livestockList.value[idx] = new LivestockModel({ id: editingId.value, ...formData });
-  } else {
-    livestockList.value.unshift(new LivestockModel({ ...formData }));
+const saveData = async () => {
+  if (!formData.category || !formData.breed) {
+    useToast().warning('Data belum lengkap', 'Lengkapi jenis ternak dan ras')
+    return
   }
-  closeModal();
+  loading.value = true
+  try {
+    const payload = {
+      category: formData.category,
+      breed: formData.breed,
+      weight: formData.weight ? Number(formData.weight) : null,
+      age_months: formData.ageMonths ? Number(formData.ageMonths) : null,
+      pen_id: formData.penId || null
+    }
+
+    if (isEditMode.value) {
+      const updated = await updateLivestock(editingId.value, payload)
+      const idx = livestockList.value.findIndex(i => i.id === editingId.value)
+      if (idx !== -1) {
+        livestockList.value[idx] = mapLivestockItem(updated || { ...payload, id: editingId.value })
+      }
+    } else {
+      const created = await createLivestock(payload)
+      livestockList.value.unshift(mapLivestockItem(created || { ...payload, id: crypto.randomUUID() }))
+    }
+    closeModal()
+  } catch (e) {
+    console.error('Failed to save livestock:', e)
+    useToast().error('Gagal menyimpan data ternak', e?.data?.error?.message || e?.data?.message)
+  } finally {
+    loading.value = false
+  }
 }
 
-const confirmDelete = (item) => {
+const confirmDelete = async (item) => {
   if (confirm(`Hapus data ternak ${item.tagId}?`)) {
-    livestockList.value = livestockList.value.filter(i => i.id !== item.id);
+    loading.value = true
+    try {
+      await removeLivestock(item.id)
+      livestockList.value = livestockList.value.filter(i => i.id !== item.id)
+    } catch (e) {
+      console.error('Failed to delete livestock:', e)
+      useToast().error('Gagal menghapus data ternak', e?.data?.message)
+    } finally {
+      loading.value = false
+    }
   }
 }
 
