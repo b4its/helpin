@@ -28,9 +28,9 @@
             <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
             <span class="text-xs font-semibold text-green-400 uppercase tracking-widest">Shift Kasir</span>
           </div>
-          <h2 class="text-xl font-bold mb-2 text-white">Admin Suki SUPER</h2>
+          <h2 class="text-xl font-bold mb-2 text-white">{{ userName }}</h2>
           <span class="inline-block px-3 py-1 text-[10px] font-bold border border-green-600 text-green-400 rounded uppercase">
-            Karyawan
+            {{ userRole }}
           </span>
         </div>
 
@@ -41,7 +41,7 @@
             :to="menu.path"
             :class="[
               'relative flex items-center gap-4 px-4 py-4 transition-all duration-300 group',
-              activeMenu === menu.path
+              currentActiveMenu === menu.path
               ? 'active-menu bg-[#f4f7f5] text-[#1a402d] rounded-l-full font-black shadow-[-5px_0_10px_rgba(0,0,0,0.1)]' 
               : 'text-gray-400 hover:text-white font-bold hover:translate-x-1'
             ]"
@@ -52,7 +52,7 @@
         </nav>
 
         <div class="p-6 shrink-0 mt-auto">
-          <div class="bg-[#143222] rounded-xl p-4 flex items-center justify-between border border-white/5 shadow-inner cursor-pointer hover:bg-red-500/20 transition-colors group">
+          <div @click="logout" class="bg-[#143222] rounded-xl p-4 flex items-center justify-between border border-white/5 shadow-inner cursor-pointer hover:bg-red-500/20 transition-colors group">
             <div class="min-w-0 text-white">
               <span class="text-[10px] text-gray-500 group-hover:text-red-300 font-black uppercase block tracking-tighter transition-colors">Sistem Koperasi</span>
               <p class="text-sm font-bold truncate pr-2 group-hover:text-red-400 transition-colors">Tutup Shift & Keluar</p>
@@ -80,6 +80,13 @@ defineProps({
 })
 
 defineEmits(['close'])
+
+const route = useRoute()
+const { user, logout } = useAuth()
+const userName = computed(() => user.value?.name || 'Pengguna')
+const userRole = computed(() => user.value?.role || 'admin')
+
+const currentActiveMenu = computed(() => route.path)
 
 const menus = [
   { name: 'Kasir POS', icon: MonitorIcon, path: '/panel_hybrid/kasir' },

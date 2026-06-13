@@ -28,9 +28,9 @@
             <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
             <span class="text-xs font-semibold text-green-400 uppercase tracking-widest">Petani Aktif</span>
           </div>
-          <h2 class="text-xl font-bold mb-2 text-white">Petani Suki</h2>
+          <h2 class="text-xl font-bold mb-2 text-white">{{ userName }}</h2>
           <span class="inline-block px-3 py-1 text-[10px] font-bold border border-green-600 text-green-400 rounded uppercase">
-            Petani
+            {{ userRole }}
           </span>
         </div>
 
@@ -52,10 +52,10 @@
         </nav>
 
         <div class="p-6 shrink-0 mt-auto">
-          <div class="bg-[#143222] rounded-xl p-4 flex items-center justify-between border border-white/5 shadow-inner">
+          <div @click="logout" class="bg-[#143222] rounded-xl p-4 flex items-center justify-between border border-white/5 shadow-inner cursor-pointer hover:bg-red-500/20 transition-colors">
             <div class="min-w-0 text-white">
               <span class="text-[10px] text-gray-500 font-black uppercase block tracking-tighter">Authorized Admin</span>
-              <p class="text-sm font-bold truncate pr-2 italic">Admin Suki SUPER</p>
+              <p class="text-sm font-bold truncate pr-2 italic">{{ userName }}</p>
             </div>
             <LogOutIcon class="w-5 h-5 text-red-400 cursor-pointer hover:scale-110 transition" />
           </div>
@@ -79,6 +79,9 @@ defineProps({
 defineEmits(['close'])
 
 const route = useRoute()
+const { user, logout } = useAuth()
+const userName = computed(() => user.value?.name || 'Pengguna')
+const userRole = computed(() => user.value?.role || 'petani')
 
 // DAFTAR MENU TERPUSAT UNTUK PANEL PETANI
 const menus = [
