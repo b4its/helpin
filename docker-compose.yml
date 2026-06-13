@@ -1,59 +1,118 @@
 services:
-  db:
-    image: mysql:8.4
-    container_name: helpin-db
+  # ============================================================
+  # DATABASE
+  # ============================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: helpin-postgres
+    ports:
+      - "5432:5432"
     environment:
-      MYSQL_DATABASE: helpin
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      POSTGRES_DB: helpin
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend_rust/migrations/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql
     networks:
       - helpin-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d helpin"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
-  # GRUP APACHE 
-  apache:
-    build:
-      context: .
-      dockerfile: ./docker-apache/Dockerfile
-    container_name: helpin-apache
-    profiles: ["apache"] # 
+  mongodb:
+    image: mongo:7
+    container_name: helpin-mongodb
     ports:
-      - "8000:80"
+      - "27017:27017"
     volumes:
-      - .:/var/www/html
+      - mongo_data:/data/db
     networks:
       - helpin-network
 
-  # GRUP NGINX (Terdiri dari Nginx + PHP-FPM)
-  php-fpm:
+  # ============================================================
+  # BACKEND RUST (Core API)
+  # ============================================================
+  backend_rust:
     build:
-      context: .
-      dockerfile: ./docker-nginx/Dockerfile
-    container_name: helpin-php-fpm
-    profiles: ["nginx"] # <--- Ikut grup nginx
-    volumes:
-      - .:/var/www/html
-    networks:
-      - helpin-network
-
-  nginx:
-    image: nginx:alpine
-    container_name: helpin-nginx
-    profiles: ["nginx"] # <--- Ikut grup nginx
+      context: ./backend_rust
+      dockerfile: Dockerfile
+    container_name: helpin-backend-rust
     ports:
-      - "8000:80"
-      - "5173:5173" # misal pakai vite
-    volumes:
-      - .:/var/www/html
-      - ./docker-nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - "8080:8080"
     depends_on:
-      - php-fpm
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgres://postgres@postgres:5432/helpin
+      MONGODB_URI: mongodb://mongodb:27017
+      JWT_SECRET: rahasia_aman_helpin_2026
+      ML_SERVICE_URL: http://backend_python:8081
+      BLOCKCHAIN_RPC_URL: http://localhost:8545
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8080
+      RUST_LOG: info
     networks:
       - helpin-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  # ============================================================
+  # BACKEND PYTHON (ML Service)
+  # ============================================================
+  backend_python:
+    build:
+      context: ./backend_python
+      dockerfile: Dockerfile
+    container_name: helpin-backend-python
+    ports:
+      - "8081:8081"
+    environment:
+      MODEL_PATH: /app/ml_models
+      HOST: 0.0.0.0
+      PORT: 8081
+    networks:
+      - helpin-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # ============================================================
+  # FRONTEND NUXT (Pre-built)
+  # 
+  # ============================================================
+  helpin_nuxt:
+    build:
+      context: ./helpin_nuxt
+      dockerfile: Dockerfile
+    container_name: helpin-nuxt
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend_rust:
+        condition: service_healthy
+    environment:
+      NUXT_PUBLIC_API_BASE: http://localhost:8080
+    networks:
+      - helpin-network
+    restart: unless-stopped
 
 networks:
   helpin-network:
     driver: bridge
 
 volumes:
-  mysql_data:
+  postgres_data:
+  mongo_data:
